@@ -1,0 +1,73 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="row">
+  <div class="col-lg-8">
+    <div class="card p-4 mb-4">
+      <h2>Dashboard de Apostas</h2>
+      <p>Usuário: <strong>{{ username }}</strong></p>
+      <form method="POST">
+        <div class="form-row">
+          <div class="form-group col-md-6">
+            <label>Casa</label>
+            <input type="text" class="form-control" name="house" required>
+          </div>
+          <div class="form-group col-md-4">
+            <label>Valor</label>
+            <input type="text" class="form-control" name="amount" required>
+          </div>
+          <div class="form-group col-md-2 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary-custom btn-block">Adicionar</button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div class="card p-4 mb-4">
+      <h3>Minhas apostas</h3>
+      {% if bets %}
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Casa</th>
+              <th>Valor</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for bet in bets %}
+              <tr>
+                <td>{{ bet.date }}</td>
+                <td>{{ bet.house }}</td>
+                <td>R$ {{ '%.2f'|format(bet.amount) }}</td>
+                <td>
+                  <form method="POST" action="{{ url_for('delete', bet_id=bet.id) }}" style="display:inline">
+                    <button class="btn btn-sm btn-danger" type="submit">Excluir</button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p>Nenhuma aposta registrada ainda.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card p-4 mb-4 bg-primary-custom text-white">
+      <h3>Resumo por casa</h3>
+      {% if summary %}
+        <ul class="list-unstyled mt-3">
+          {% for house, values in summary.items() %}
+            <li class="mb-2"><strong>{{ house }}</strong>: {{ values.count }} apostas • R$ {{ '%.2f'|format(values.total) }}</li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p>Nenhuma aposta para resumir.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
