@@ -195,4 +195,19 @@ def dashboard():
 def delete_bet_route(bet_id):
     if 'username' in session:
         username = session['username']
-        delete_bet(username
+        delete_bet(username, bet_id)
+    return redirect(url_for('dashboard'))
+
+
+@app.route('/logout')
+def logout():
+    session.pop('username', None)
+    return redirect(url_for('home'))
+
+
+if __name__ == '__main__':
+    # Configuração correta de porta para ambiente local ou produção
+    port = int(os.getenv("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=True)
+else:
+    init_db()
