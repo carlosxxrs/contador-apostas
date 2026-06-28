@@ -14,6 +14,10 @@ app.secret_key = os.getenv('SECRET_KEY', 'chave_padrao_para_desenvolvimento_loca
 DB_FILE = Path(__file__).resolve().parent / 'apostas.db'
 DATABASE_URL = os.getenv('DATABASE_URL', f'sqlite:///{DB_FILE}')
 
+# Correção automática para o formato exigido pelo SQLAlchemy em produção
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
 engine = create_engine(DATABASE_URL, future=True)
 metadata = MetaData()
 
@@ -21,7 +25,7 @@ users = Table(
     'users', metadata,
     Column('id', Integer, primary_key=True),
     Column('username', String(100), unique=True, nullable=False),
-    Column('password', String(255), nullable=False) # Aumentado para suportar o hash seguro
+    Column('password', String(255), nullable=False)
 )
 
 bets = Table(
@@ -35,7 +39,6 @@ bets = Table(
 
 
 def hash_password(password):
-    # Gera um hash seguro com Salt automático usando a biblioteca padrão do Flask
     return generate_password_hash(password)
 
 
@@ -66,7 +69,6 @@ def get_user(username):
 
 def authenticate_user(username, password):
     user = get_user(username)
-    # Verifica a senha digitada contra o hash seguro do banco
     return bool(user and check_password_hash(user.password, password))
 
 
@@ -119,7 +121,6 @@ def delete_bet(username, bet_id):
     if user is None:
         return False
     with engine.begin() as conn:
-        # Aqui usamos o 'delete' do SQLAlchemy sem conflito de nome
         result = conn.execute(delete(bets).where(bets.c.id == bet_id, bets.c.user_id == user.id))
     return result.rowcount > 0
 
@@ -170,7 +171,6 @@ def dashboard():
         add_bet(username, house, amount)
         return redirect(url_for('dashboard'))
 
-    # Cálculo do resumo corrigido e garantido contra falhas de tipo
     summary = {}
     for bet in user_bets:
         house_name = bet.house
@@ -183,7 +183,7 @@ def dashboard():
     return render_template('dashboard.html', username=username, bets=user_bets, summary=summary)
 
 
-# Nome da função alterado para evitar conflito com o 'delete' do SQLAlchemy
+# Mudança do nome da função para evitar conflito com o 'delete' do SQLAlchemy
 @app.route('/delete/<int:bet_id>', methods=['POST'])
 def delete_bet_route(bet_id):
     if 'username' in session:
