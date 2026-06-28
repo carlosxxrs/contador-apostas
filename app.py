@@ -47,6 +47,7 @@ def hash_password(password):
 
 
 def init_db():
+    metadata.drop_all(engine)
     metadata.create_all(engine)
     with engine.begin() as conn:
         user = conn.execute(select(users.c.id).where(users.c.username == 'carlo')).first()
