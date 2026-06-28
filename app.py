@@ -6,7 +6,11 @@ from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, 
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import generate_password_hash, check_password_hash
 
-app = Flask(__name__)
+# Força o Flask a procurar na pasta atual e na pasta templates de forma garantida
+TEMPLATE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), 'templates'))
+ROOT_DIR = os.path.abspath(os.path.dirname(__file__))
+
+app = Flask(__name__, template_folder=[TEMPLATE_DIR, ROOT_DIR])
 
 # Configura uma chave secreta segura usando variáveis de ambiente em produção
 app.secret_key = os.getenv('SECRET_KEY', 'chave_padrao_para_desenvolvimento_local_123')
