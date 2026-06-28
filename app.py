@@ -187,7 +187,6 @@ def dashboard():
     return render_template('dashboard.html', username=username, bets=user_bets, summary=summary)
 
 
-# Mudança do nome da função para evitar conflito com o 'delete' do SQLAlchemy
 @app.route('/delete/<int:bet_id>', methods=['POST'])
 def delete_bet_route(bet_id):
     if 'username' in session:
