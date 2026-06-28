@@ -58,11 +58,15 @@ def init_db():
             if user is None:
                 result = conn.execute(insert(users).values(username='carlo', password=hash_password('1234')))
                 user_id = result.inserted_primary_key[0]
+                
+                # CORREÇÃO DA DATA: Agora gerada dinamicamente pelo sistema
+                data_atual = datetime.now().strftime('%d/%m/%Y %H:%M')
+                
                 conn.execute(
                     insert(bets),
                     [
-                        {'user_id': user_id, 'house': 'bet 365', 'amount': 1000.0, 'date': '28/06/2026 00:00'},
-                        {'user_id': user_id, 'house': 'betano', 'amount': 500.0, 'date': '28/06/2026 00:05'}
+                        {'user_id': user_id, 'house': 'bet 365', 'amount': 1000.0, 'date': data_atual},
+                        {'user_id': user_id, 'house': 'betano', 'amount': 500.0, 'date': data_atual}
                     ]
                 )
     except Exception as e:
@@ -206,7 +210,6 @@ def logout():
 
 
 if __name__ == '__main__':
-    # Configuração correta de porta para ambiente local ou produção
     port = int(os.getenv("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)
 else:
