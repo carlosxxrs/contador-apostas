@@ -6,7 +6,15 @@ from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, 
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import generate_password_hash, check_password_hash
 
-app = Flask(__name__)
+# Descobre o caminho exato onde o projeto está rodando no Railway
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+TEMPLATE_DIR = os.path.join(BASE_DIR, 'templates')
+
+# Se a pasta templates existir, usa ela. Se não, procura os HTMLs na raiz do projeto.
+if os.path.exists(TEMPLATE_DIR):
+    app = Flask(__name__, template_folder=TEMPLATE_DIR)
+else:
+    app = Flask(__name__, template_folder=BASE_DIR)
 
 # Configura uma chave secreta segura usando variáveis de ambiente em produção
 app.secret_key = os.getenv('SECRET_KEY', 'chave_padrao_para_desenvolvimento_local_123')
@@ -187,17 +195,4 @@ def dashboard():
 def delete_bet_route(bet_id):
     if 'username' in session:
         username = session['username']
-        delete_bet(username, bet_id)
-    return redirect(url_for('dashboard'))
-
-
-@app.route('/logout')
-def logout():
-    session.pop('username', None)
-    return redirect(url_for('home'))
-
-
-if __name__ == '__main__':
-    app.run(debug=True)
-else:
-    init_db()
+        delete_bet(username
