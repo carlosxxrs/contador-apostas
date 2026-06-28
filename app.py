@@ -37,40 +37,23 @@ bets = Table(
     Column('date', String(50), nullable=False)
 )
 
-
 def hash_password(password):
     return generate_password_hash(password)
 
-
 def init_db():
     metadata.create_all(engine)
-    with engine.begin() as conn:
-        user = conn.execute(select(users.c.id).where(users.c.username == 'carlo')).first()
-        if user is None:
-            result = conn.execute(insert(users).values(username='carlo', password=hash_password('1234')))
-            user_id = result.inserted_primary_key[0]
-            conn.execute(
-                insert(bets),
-                [
-                    {'user_id': user_id, 'house': 'bet 365', 'amount': 1000.0, 'date': '28/06/2026 00:00'},
-                    {'user_id': user_id, 'house': 'betano', 'amount': 500.0, 'date': '28/06/2026 00:05'}
-                ]
-            )
 
 # Inicializa o banco de dados
 init_db()
-
 
 def get_user(username):
     with engine.connect() as conn:
         row = conn.execute(select(users).where(users.c.username == username)).first()
     return row
 
-
 def authenticate_user(username, password):
     user = get_user(username)
     return bool(user and check_password_hash(user.password, password))
-
 
 def create_user(username, password):
     try:
@@ -79,7 +62,6 @@ def create_user(username, password):
         return True
     except IntegrityError:
         return False
-
 
 def add_bet(username, house, amount):
     try:
@@ -102,7 +84,6 @@ def add_bet(username, house, amount):
         )
     return True
 
-
 def get_user_bets(username):
     user = get_user(username)
     if user is None:
@@ -115,7 +96,6 @@ def get_user_bets(username):
         ).fetchall()
     return rows
 
-
 def delete_bet(username, bet_id):
     user = get_user(username)
     if user is None:
@@ -124,11 +104,9 @@ def delete_bet(username, bet_id):
         result = conn.execute(delete(bets).where(bets.c.id == bet_id, bets.c.user_id == user.id))
     return result.rowcount > 0
 
-
 @app.route('/')
 def home():
     return render_template('home.html')
-
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -144,7 +122,6 @@ def register():
         flash('Usuário já existe.', 'danger')
     return render_template('register.html')
 
-
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -155,7 +132,6 @@ def login():
             return redirect(url_for('dashboard'))
         flash('Usuário ou senha inválidos.', 'danger')
     return render_template('login.html')
-
 
 @app.route('/dashboard', methods=['GET', 'POST'])
 def dashboard():
@@ -182,7 +158,6 @@ def dashboard():
 
     return render_template('dashboard.html', username=username, bets=user_bets, summary=summary)
 
-
 @app.route('/delete/<int:bet_id>', methods=['POST'])
 def delete_bet_route(bet_id):
     if 'username' in session:
@@ -190,12 +165,10 @@ def delete_bet_route(bet_id):
         delete_bet(username, bet_id)
     return redirect(url_for('dashboard'))
 
-
 @app.route('/logout')
 def logout():
     session.pop('username', None)
     return redirect(url_for('home'))
-
 
 if __name__ == '__main__':
     init_db()
