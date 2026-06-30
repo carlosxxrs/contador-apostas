@@ -1,9 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 import os
-from datetime import datetime
+from datetime import timedelta
 from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, Float, select, insert, delete
-from sqlalchemy.exc import IntegrityError
-from werkzeug.security import generate_password_hash, check_password_hash
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 TEMPLATE_DIR = os.path.join(BASE_DIR, 'templates')
@@ -13,8 +11,11 @@ if os.path.exists(TEMPLATE_DIR):
 else:
     app = Flask(__name__, template_folder=BASE_DIR)
 
-app.secret_key = os.getenv('SECRET_KEY', 'chave_padrao_para_desenvolvimento_local_123')
+# CONFIGURAÇÃO DE SESSÃO PERMANENTE (Mantém logado mesmo se reiniciar)
+app.secret_key = os.getenv('SECRET_KEY', 'chave_secreta_super_segura_9988')
+app.permanent_session_lifetime = timedelta(days=30)  # Lembra o login por 30 dias
 
+# Conexão com o banco PostgreSQL do Railway
 DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///apostas.db')
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
@@ -22,11 +23,12 @@ if DATABASE_URL.startswith("postgres://"):
 engine = create_engine(DATABASE_URL, future=True)
 metadata = MetaData()
 
+# Tabelas Simplificadas
 users = Table(
     'users', metadata,
     Column('id', Integer, primary_key=True),
     Column('username', String(100), unique=True, nullable=False),
-    Column('password', String(255), nullable=False)
+    Column('password', String(100), nullable=False)
 )
 
 bets = Table(
@@ -34,141 +36,116 @@ bets = Table(
     Column('id', Integer, primary_key=True),
     Column('user_id', Integer, nullable=False),
     Column('house', String(200), nullable=False),
-    Column('amount', Float, nullable=False),
-    Column('date', String(50), nullable=False)
+    Column('amount', Float, nullable=False)
 )
-
-def hash_password(password):
-    return generate_password_hash(password)
 
 def init_db():
     try:
         metadata.create_all(engine)
     except Exception as e:
-        print(f"Erro ao criar tabelas: {e}")
-
-def get_user(username):
-    with engine.connect() as conn:
-        row = conn.execute(select(users).where(users.c.username == username)).first()
-    return row
-
-def authenticate_user(username, password):
-    user = get_user(username)
-    return bool(user and check_password_hash(user.password, password))
-
-def create_user(username, password):
-    try:
-        with engine.begin() as conn:
-            conn.execute(insert(users).values(username=username, password=hash_password(password)))
-        return True
-    except IntegrityError:
-        return False
-
-def add_bet(username, house, amount):
-    try:
-        amount_value = float(amount)
-    except ValueError:
-        amount_value = 0.0
-
-    user = get_user(username)
-    if user is None:
-        return False
-
-    with engine.begin() as conn:
-        conn.execute(
-            insert(bets).values(
-                user_id=user.id,
-                house=house,
-                amount=round(amount_value, 2),
-                date=datetime.now().strftime('%d/%m/%Y %H:%M')
-            )
-        )
-    return True
-
-def get_user_bets(username):
-    user = get_user(username)
-    if user is None:
-        return []
-    with engine.connect() as conn:
-        rows = conn.execute(
-            select(bets.c.id, bets.c.house, bets.c.amount, bets.c.date)
-            .where(bets.c.user_id == user.id)
-            .order_by(bets.c.id.desc())
-        ).fetchall()
-    return rows
-
-def delete_bet(username, bet_id):
-    user = get_user(username)
-    if user is None:
-        return False
-    with engine.begin() as conn:
-        result = conn.execute(delete(bets).where(bets.c.id == bet_id, bets.c.user_id == user.id))
-    return result.rowcount > 0
+        print(f"Erro ao iniciar banco: {e}")
 
 @app.route('/')
 def home():
-    return render_template('home.html')
+    if 'username' in session:
+        return redirect(url_for('dashboard'))
+    return redirect(url_for('login'))
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        username = request.form['username'].strip()
-        password = request.form['password']
+        username = request.form['username'].strip().lower()
+        password = request.form['password'].strip()
+        
         if not username or not password:
-            flash('Preencha todos os campos.', 'danger')
+            flash('Preencha os campos!', 'danger')
             return redirect(url_for('register'))
-        if create_user(username, password):
-            flash('Usuário criado com sucesso. Faça login.', 'success')
-            return redirect(url_for('login'))
-        flash('Usuário já existe.', 'danger')
+            
+        with engine.connect() as conn:
+            user_exists = conn.execute(select(users).where(users.c.username == username)).first()
+            
+        if user_exists:
+            flash('Esse usuário já existe!', 'danger')
+            return redirect(url_for('register'))
+            
+        with engine.begin() as conn:
+            conn.execute(insert(users).values(username=username, password=password))
+            
+        flash('Conta criada! Faça o login.', 'success')
+        return redirect(url_for('login'))
+        
     return render_template('register.html')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form['username'].strip()
-        password = request.form['password']
-        if authenticate_user(username, password):
-            session['username'] = username
+        username = request.form['username'].strip().lower()
+        password = request.form['password'].strip()
+        
+        with engine.connect() as conn:
+            user = conn.execute(select(users).where(users.c.username == username, users.c.password == password)).first()
+            
+        if user:
+            session.permanent = True  # Ativa a durabilidade do cookie de login
+            session['username'] = user.username
+            session['user_id'] = user.id
             return redirect(url_for('dashboard'))
-        flash('Usuário ou senha inválidos.', 'danger')
+        else:
+            flash('Usuário ou senha incorretos!', 'danger')
+            
     return render_template('login.html')
 
 @app.route('/dashboard', methods=['GET', 'POST'])
 def dashboard():
     if 'username' not in session:
         return redirect(url_for('login'))
-
-    username = session['username']
-    user_bets = get_user_bets(username)
-
-    if request.method == 'POST' and 'house' in request.form:
-        house = request.form['house']
-        amount = request.form['amount']
-        add_bet(username, house, amount)
+        
+    user_id = session['user_id']
+    
+    # Adicionar nova aposta
+    if request.method == 'POST':
+        house = request.form['house'].strip().upper() # Padroniza em MAIÚSCULO para somar certo
+        try:
+            amount = float(request.form['amount'])
+        except ValueError:
+            amount = 0.0
+            
+        if house and amount > 0:
+            with engine.begin() as conn:
+                conn.execute(insert(bets).values(user_id=user_id, house=house, amount=amount))
         return redirect(url_for('dashboard'))
 
-    summary = {}
-    for bet in user_bets:
-        house_name = bet.house
-        amount_value = float(bet.amount) if bet.amount else 0.0
-        summary.setdefault(house_name, {'count': 0, 'total': 0.0})
-        summary[house_name]['count'] += 1
-        summary[house_name]['total'] += amount_value
+    # Buscar apostas do usuário
+    with engine.connect() as conn:
+        all_bets = conn.execute(select(bets).where(bets.c.user_id == user_id).order_by(bets.c.id.desc())).fetchall()
 
-    return render_template('dashboard.html', username=username, bets=user_bets, summary=summary)
+    # Criar a lógica da SOMA POR CASA
+    summary = {}
+    total_geral = 0.0
+    
+    for b in all_bets:
+        casa = b.house
+        valor = float(b.amount)
+        total_geral += valor
+        
+        if casa in summary:
+            summary[casa] += valor
+        else:
+            summary[casa] = valor
+
+    return render_template('dashboard.html', username=session['username'], bets=all_bets, summary=summary, total_geral=total_geral)
 
 @app.route('/delete/<int:bet_id>', methods=['POST'])
-def delete_bet_route(bet_id):
-    if 'username' in session:
-        username = session['username']
-        delete_bet(username, bet_id)
+def delete_bet(bet_id):
+    if 'user_id' in session:
+        with engine.begin() as conn:
+            conn.execute(delete(bets).where(bets.c.id == bet_id, bets.c.user_id == session['user_id']))
     return redirect(url_for('dashboard'))
 
 @app.route('/logout')
 def logout():
-    session.pop('username', None)
-    return redirect(url_for('home'))
+    session.clear()
+    return redirect(url_for('login'))
 
 init_db()
 
