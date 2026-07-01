@@ -22,7 +22,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
-# OTIMIZAÇÃO DE VELOCIDADE PARA SQLITE (REMOVE O DELAY DE SALVAMENTO)
+# OTIMIZAÇÃO DE VELOCIDADE PARA SQLITE
 if not os.getenv("DATABASE_URL"):
     @event.listens_for(db.engine, "connect")
     def set_sqlite_pragma(dbapi_connection, connection_record):
@@ -50,7 +50,8 @@ def index():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     user_id = session['user_id']
-    user_apostas = Aposta.query.filter_by(user_id=user_id).all()
+    # ORDENAÇÃO FIXA POR ID (EVITA QUE AS CASAS MUDEM DE LUGAR APÓS EDITAR)
+    user_apostas = Aposta.query.filter_by(user_id=user_id).order_by(Aposta.id.asc()).all()
     total_soma = sum(aposta.valor for aposta in user_apostas)
     return render_template('index.html', apostas=user_apostas, total=total_soma)
 
