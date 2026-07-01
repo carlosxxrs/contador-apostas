@@ -7,7 +7,7 @@ from datetime import timedelta
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'uma_chave_secreta_e_segura_aqui'
 
-# --- CONEXÃO DIRETA COM DRIVE PG8000 PARA RAILWAY ---
+# --- CONFIGURAÇÃO DA URI DO BANCO ---
 uri = os.getenv("DATABASE_URL")
 if uri:
     if uri.startswith("postgres://"):
@@ -35,7 +35,7 @@ class Aposta(db.Model):
     valor = db.Column(db.Float, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
-# --- ROTAS DO SISTEMA ---
+# --- ROTAS ---
 @app.route('/')
 def index():
     if 'user_id' not in session:
@@ -104,9 +104,17 @@ def logout():
     session.clear()
     return redirect(url_for('login'))
 
-# --- CRIAÇÃO DE TABELAS REESCRITA COM CONTEXTO COMPATÍVEL ---
+# --- TRATAMENTO DE ERROS PARA PREVENIR TELA BRANCA ---
+@app.errorhandler(500)
+def internal_error(error):
+    return "Erro Interno do Servidor - Verifique as credenciais do banco.", 500
+
+# Garantir criação segura de tabelas em produção
 with app.app_context():
-    db.create_all()
+    try:
+        db.create_all()
+    except Exception as e:
+        print(f"Erro ao inicializar banco de dados: {e}")
 
 if __name__ == '__main__':
     app.run(debug=True)
