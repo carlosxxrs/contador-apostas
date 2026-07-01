@@ -2,28 +2,26 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Gerenciador de Apostas</title>
     <style>
-        body { background-color: #121214; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .login-card { background: #202024; padding: 40px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); text-align: center; width: 320px; }
-        .input-group { position: relative; width: 100%; margin: 10px 0; }
-        input { width: 100%; padding: 12px; border-radius: 4px; border: 1px solid #29292e; background: #121214; color: white; box-sizing: border-box; }
-        .toggle-btn { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #a8a8b3; cursor: pointer; font-size: 12px; }
-        button[type="submit"] { width: 100%; padding: 12px; background: #8257e5; border: none; color: white; font-weight: bold; border-radius: 4px; cursor: pointer; margin-top: 10px; }
+        body { background-color: #121214; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+        .login-card { background: #202024; padding: 30px 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); text-align: center; width: 100%; max-width: 340px; box-sizing: border-box; }
+        .input-group { position: relative; width: 100%; margin: 12px 0; }
+        input { width: 100%; padding: 14px; border-radius: 4px; border: 1px solid #29292e; background: #121214; color: white; box-sizing: border-box; font-size: 16px; }
+        .toggle-btn { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #a8a8b3; cursor: pointer; font-size: 13px; }
+        button[type="submit"] { width: 100%; padding: 14px; background: #8257e5; border: none; color: white; font-weight: bold; border-radius: 4px; cursor: pointer; margin-top: 10px; font-size: 16px; }
         button[type="submit"]:hover { background: #9466ff; }
-        a { color: #a8a8b3; text-decoration: none; font-size: 14px; display: block; margin-top: 15px; }
-        
-        /* Estilos dos Alertas */
+        a { color: #a8a8b3; text-decoration: none; font-size: 14px; display: block; margin-top: 18px; }
         .alert { padding: 10px; border-radius: 4px; font-size: 14px; margin-bottom: 15px; text-align: left; color: white; }
-        .alert-danger { background: #f75a68; }   /* Vermelho para Erros */
-        .alert-success { background: #04d361; }  /* Verde para Sucesso */
+        .alert-danger { background: #f75a68; }
+        .alert-success { background: #04d361; }
     </style>
 </head>
 <body>
     <div class="login-card">
         <h2>Acessar Conta</h2>
         
-        <!-- Exibição Dinâmica de Alertas baseada na Categoria do Flask -->
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
