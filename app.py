@@ -22,7 +22,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
-# --- MODELOS ---
+# --- MODELOS DO BANCO ---
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
@@ -35,7 +35,9 @@ class Aposta(db.Model):
     valor = db.Column(db.Float, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
-# --- ROTAS ---
+# --- ROTAS CORRIGIDAS ---
+
+# 1. Rota Inicial (Painel)
 @app.route('/')
 def index():
     if 'user_id' not in session:
@@ -45,6 +47,22 @@ def index():
     total_soma = sum(aposta.valor for aposta in user_apostas)
     return render_template('index.html', apostas=user_apostas, total=total_soma)
 
+# 2. Rota de Login
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        user = User.query.filter_by(username=username).first()
+        if user and check_password_hash(user.password, password):
+            session['user_id'] = user.id
+            session['username'] = user.username
+            return redirect(url_for('index'))
+        else:
+            flash('Usuário ou senha incorretos.', 'danger')
+    return render_template('login.html')
+
+# 3. Rota de Cadastro
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
@@ -58,63 +76,17 @@ def register():
         new_user = User(username=username, password=hashed_password)
         db.session.add(new_user)
         db.session.commit()
-        flash('Conta criada com sucesso! Faça login.', 'success')
         return redirect(url_for('login'))
     return render_template('register.html')
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        user = User.query.filter_by(username=username).first()
-        if user and check_password_hash(user.password, password):
-            session['user_id'] = user.id
-            session['username'] = user.username
-            session.permanent = True
-            app.permanent_session_lifetime = timedelta(days=30)
-            return redirect(url_for('index'))
-        else:
-            flash('Usuário ou senha incorretos.', 'danger')
-    return render_template('login.html')
-
-@app.route('/adicionar', methods=['POST'])
-def adicionar_aposta():
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
-    casa = request.form.get('casa')
-    valor = float(request.form.get('valor', 0))
-    nova_aposta = Aposta(casa=casa, valor=valor, user_id=session['user_id'])
-    db.session.add(nova_aposta)
-    db.session.commit()
-    return redirect(url_for('index'))
-
-@app.route('/deletar/<int:id>')
-def deletar_aposta(id):
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
-    aposta = Aposta.query.get_or_404(id)
-    if aposta.user_id == session['user_id']:
-        db.session.delete(aposta)
-        db.session.commit()
-    return redirect(url_for('index'))
 
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect(url_for('login'))
 
-# --- TRATAMENTO DE ERROS PARA PREVENIR TELA BRANCA ---
-@app.errorhandler(500)
-def internal_error(error):
-    return "Erro Interno do Servidor - Verifique as credenciais do banco.", 500
-
-# Garantir criação segura de tabelas em produção
+# Inicialização segura das tabelas
 with app.app_context():
-    try:
-        db.create_all()
-    except Exception as e:
-        print(f"Erro ao inicializar banco de dados: {e}")
+    db.create_all()
 
 if __name__ == '__main__':
     app.run(debug=True)
