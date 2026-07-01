@@ -7,11 +7,13 @@ from datetime import timedelta
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'uma_chave_secreta_e_segura_aqui'
 
-# --- CONEXÃO LIMPA PARA O RAILWAY ---
+# --- CONEXÃO LIMPA COM DRIVE PG8000 PARA O RAILWAY ---
 uri = os.getenv("DATABASE_URL")
 if uri:
     if uri.startswith("postgres://"):
-        uri = uri.replace("postgres://", "postgresql://", 1)
+        uri = uri.replace("postgres://", "postgresql+pg8000://", 1)
+    elif uri.startswith("postgresql://"):
+        uri = uri.replace("postgresql://", "postgresql+pg8000://", 1)
 else:
     uri = 'sqlite:///local_database.db'
 
