@@ -84,4 +84,7 @@ with app.app_context():
     db.create_all()
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Lê a porta que o Railway exige, ou usa a 5000 se for local
+    port = int(os.environ.get("PORT", 5000))
+    # O host="0.0.0.0" abre as portas do Flask para o mundo externo
+    app.run(host="0.0.0.0", port=port, debug=True)
