@@ -47,6 +47,26 @@ def index():
     total_soma = sum(aposta.valor for aposta in user_apostas)
     return render_template('index.html', apostas=user_apostas, total=total_soma)
 
+# --- NOVA ROTA INCLUÍDA ABAIXO DO INDEX ---
+@app.route('/adicionar_aposta', methods=['POST'])
+def adicionar_aposta():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+        
+    casa = request.form.get('casa')
+    valor_texto = request.form.get('valor')
+    
+    if casa and valor_texto:
+        try:
+            valor = float(valor_texto)
+            nova_aposta = Aposta(casa=casa, valor=valor, user_id=session['user_id'])
+            db.session.add(nova_aposta)
+            db.session.commit()
+        except ValueError:
+            flash('Valor inválido inserido.', 'danger')
+            
+    return redirect(url_for('index'))
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
