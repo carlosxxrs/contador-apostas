@@ -12,17 +12,22 @@
         button[type="submit"] { width: 100%; padding: 12px; background: #8257e5; border: none; color: white; font-weight: bold; border-radius: 4px; cursor: pointer; margin-top: 10px; }
         button[type="submit"]:hover { background: #9466ff; }
         a { color: #a8a8b3; text-decoration: none; font-size: 14px; display: block; margin-top: 15px; }
-        .alert { background: #f75a68; color: white; padding: 10px; border-radius: 4px; font-size: 14px; margin-bottom: 15px; text-align: left; }
+        
+        /* Estilos dos Alertas */
+        .alert { padding: 10px; border-radius: 4px; font-size: 14px; margin-bottom: 15px; text-align: left; color: white; }
+        .alert-danger { background: #f75a68; }   /* Vermelho para Erros */
+        .alert-success { background: #04d361; }  /* Verde para Sucesso */
     </style>
 </head>
 <body>
     <div class="login-card">
         <h2>Acessar Conta</h2>
         
+        <!-- Exibição Dinâmica de Alertas baseada na Categoria do Flask -->
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
-                    <div class="alert">{{ message }}</div>
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
                 {% endfor %}
             {% endif %}
         {% endwith %}
@@ -43,11 +48,7 @@
     <script>
         function togglePassword(id) {
             const input = document.getElementById(id);
-            if (input.type === "password") {
-                input.type = "text";
-            } else {
-                input.type = "password";
-            }
+            input.type = input.type === "password" ? "text" : "password";
         }
     </script>
 </body>
