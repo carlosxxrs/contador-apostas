@@ -17,7 +17,6 @@ if uri:
 else:
     uri = 'sqlite:///local_database.db'
 
-
 app.config['SQLALCHEMY_DATABASE_URI'] = uri
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -36,10 +35,7 @@ class Aposta(db.Model):
     valor = db.Column(db.Float, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
-@app.before_request
-def setup_db():
-    db.create_all()
-
+# --- ROTAS DO SISTEMA ---
 @app.route('/')
 def index():
     if 'user_id' not in session:
@@ -107,6 +103,10 @@ def deletar_aposta(id):
 def logout():
     session.clear()
     return redirect(url_for('login'))
+
+# --- CRIAÇÃO DE TABELAS REESCRITA COM CONTEXTO COMPATÍVEL ---
+with app.app_context():
+    db.create_all()
 
 if __name__ == '__main__':
     app.run(debug=True)
