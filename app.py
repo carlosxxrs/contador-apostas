@@ -10,14 +10,13 @@ app.config['SECRET_KEY'] = 'uma_chave_secreta_e_segura_aqui'
 # --- AJUSTE PARA O CONECTOR PG8000 NO RENDER ---
 uri = os.getenv("DATABASE_URL")
 if uri:
-    if uri.startswith("postgresql://"):
-        uri = uri.replace("postgresql://", "postgresql+pg8000://", 1)
-    elif uri.startswith("postgres://"):
-        uri = uri.replace("postgres://", "postgresql+pg8000://", 1)
+    # O Railway às vezes envia como 'postgres://', o Flask exige 'postgresql://'
+    if uri.startswith("postgres://"):
+        uri = uri.replace("postgres://", "postgresql://", 1)
 else:
     # Caso não ache o banco em produção, usa SQLite local para testes
     uri = 'sqlite:///local_database.db'
-
+    
 app.config['SQLALCHEMY_DATABASE_URI'] = uri
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
