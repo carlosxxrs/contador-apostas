@@ -2,12 +2,85 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Teste do Sistema</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel - Gerenciador de Apostas</title>
+    <style>
+        body { background-color: #121214; color: white; font-family: sans-serif; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .container { width: 100%; max-width: 800px; margin-top: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 800px; margin-bottom: 30px; border-bottom: 1px solid #29292e; padding-bottom: 15px; }
+        .header h1 { margin: 0; font-size: 24px; color: #04d361; }
+        .btn-logout { background: #f75a68; color: white; border: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; cursor: pointer; text-decoration: none; font-size: 14px; }
+        .btn-logout:hover { background: #c54754; }
+        
+        /* Cards de Resumo */
+        .summary-card { background: #202024; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); margin-bottom: 25px; border-left: 5px solid #8257e5; }
+        .summary-card h3 { margin: 0 0 5px 0; color: #a8a8b3; font-size: 14px; text-transform: uppercase; }
+        .summary-card p { margin: 0; font-size: 28px; font-weight: bold; color: #ffffff; }
+
+        /* Formulário */
+        .form-card { background: #202024; padding: 25px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); margin-bottom: 25px; }
+        .form-card h2 { margin-top: 0; font-size: 18px; margin-bottom: 15px; color: #e1e1e6; }
+        .form-inline { display: flex; gap: 10px; flex-wrap: wrap; }
+        .form-inline input { flex: 1; min-width: 150px; padding: 12px; border-radius: 4px; border: 1px solid #29292e; background: #121214; color: white; box-sizing: border-box; }
+        .btn-add { background: #8257e5; color: white; border: none; padding: 12px 24px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+        .btn-add:hover { background: #9466ff; }
+
+        /* Tabela */
+        .table-card { background: #202024; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); width: 100%; box-sizing: border-box; }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th, td { padding: 15px; border-bottom: 1px solid #29292e; }
+        th { color: #a8a8b3; font-weight: normal; font-size: 14px; }
+        td { color: #e1e1e6; }
+        .no-data { text-align: center; color: #a8a8b3; padding: 30px; }
+    </style>
 </head>
-<body style="background-color: #121214; color: white; text-align: center; font-family: sans-serif; padding-top: 50px;">
-    <h1>🚀 O SERVIDOR ESTÁ VIVO!</h1>
-    <p>Se você está vendo esta tela escura com letras brancas, o Python e o Railway funcionaram 100%.</p>
-    <br>
-    <a href="/login" style="color: #8257e5; font-size: 20px; text-decoration: none; font-weight: bold;">Ir para a Tela de Login →</a>
+<body>
+
+    <div class="header">
+        <h1>📊 Contador de Apostas</h1>
+        <a href="/logout" class="btn-logout">Sair do Sistema</a>
+    </div>
+
+    <div class="container">
+        <div class="summary-card">
+            <h3>Total Acumulado</h3>
+            <p>R$ {{ "%.2f"|format(total) }}</p>
+        </div>
+
+        <div class="form-card">
+            <h2>Adicionar Nova Entrada</h2>
+            <form class="form-inline" method="POST" action="/adicionar_aposta">
+                <input type="text" name="casa" placeholder="Ex: Bet365, Betano" required>
+                <input type="number" step="0.01" name="valor" placeholder="Valor (R$)" required>
+                <button type="submit" class="btn-add">Salvar Registro</button>
+            </form>
+        </div>
+
+        <div class="table-card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Plataforma / Casa de Aposta</th>
+                        <th>Valor Registrado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if apostas %}
+                        {% for aposta in apostas %}
+                            <tr>
+                                <td>{{ aposta.casa }}</td>
+                                <td style="color: #04d361; font-weight: bold;">R$ {{ "%.2f"|format(aposta.valor) }}</td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="2" class="no-data">Nenhuma aposta cadastrada ainda. Comece adicionando acima!</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
 </body>
 </html>
