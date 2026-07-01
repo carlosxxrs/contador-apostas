@@ -7,16 +7,11 @@ from datetime import timedelta
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'uma_chave_secreta_e_segura_aqui'
 
-# --- CONFIGURAÇÃO DA URI DO BANCO ---
-uri = os.getenv("DATABASE_URL")
-if uri:
-    if uri.startswith("postgres://"):
-        uri = uri.replace("postgres://", "postgresql+pg8000://", 1)
-    elif uri.startswith("postgresql://"):
-        uri = uri.replace("postgresql://", "postgresql+pg8000://", 1)
-else:
-    uri = 'sqlite:///local_database.db'
+# --- FORÇAR SQLITE TEMPORARIAMENTE PARA TESTE ---
+uri = 'sqlite:///local_database.db'
 
+app.config['SQLALCHEMY_DATABASE_URI'] = uri
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_DATABASE_URI'] = uri
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
