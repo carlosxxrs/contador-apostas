@@ -7,19 +7,13 @@ from datetime import timedelta
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'uma_chave_secreta_e_segura_aqui'
 
-# --- CONEXÃO COM DRIVE PG8000 + PARÂMETROS SSL ---
+# --- CONEXÃO DIRETA COM DRIVE PG8000 PARA RAILWAY ---
 uri = os.getenv("DATABASE_URL")
 if uri:
     if uri.startswith("postgres://"):
         uri = uri.replace("postgres://", "postgresql+pg8000://", 1)
     elif uri.startswith("postgresql://"):
         uri = uri.replace("postgresql://", "postgresql+pg8000://", 1)
-    
-    # Força o desmembramento do SSL para o pg8000 conectar no Railway
-    if "?" in uri:
-        uri += "&sslmode=disable"
-    else:
-        uri += "?sslmode=disable"
 else:
     uri = 'sqlite:///local_database.db'
 
