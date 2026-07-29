@@ -68,8 +68,11 @@ def index():
     for item in user_lucros:
         if item.nome_conta not in contas_lucro:
             contas_lucro[item.nome_conta] = {'itens': [], 'total': 0.0}
-        contas_lucro[item.nome_conta]['itens'].append(item)
-        contas_lucro[item.nome_conta]['total'] += item.valor_lucro
+        
+        # Filtra os itens vazios criados apenas ao registrar uma nova conta
+        if item.nome_aposta and item.valor_lucro is not None:
+            contas_lucro[item.nome_conta]['itens'].append(item)
+            contas_lucro[item.nome_conta]['total'] += item.valor_lucro
 
     return render_template(
         'index.html', 
@@ -119,13 +122,49 @@ def editar_aposta(id):
                 flash('Valor inválido.', 'danger')
     return redirect(url_for('index'))
 
-# --- ROTAS DO BLOCO DE LUCRO DA CONTA ---
-@app.route('/adicionar_lucro', methods=['POST'])
-def adicionar_lucro():
+# --- ROTAS DO BLOCO DE LUCRO ---
+@app.route('/criar_conta_lucro', methods=['POST'])
+def criar_conta_lucro():
     if 'user_id' not in session:
         return redirect(url_for('login'))
         
     nome_conta = request.form.get('nome_conta', '').strip().upper()
+    nome_aposta = request.form.get('nome_aposta', '').strip()
+    valor_texto = request.form.get('valor_lucro')
+    
+    if nome_conta:
+        if nome_aposta and valor_texto:
+            try:
+                valor = float(valor_texto)
+                novo_lucro = LucroOperacao(
+                    nome_conta=nome_conta, 
+                    nome_aposta=nome_aposta, 
+                    valor_lucro=valor, 
+                    user_id=session['user_id']
+                )
+                db.session.add(novo_lucro)
+                db.session.commit()
+            except ValueError:
+                flash('Valor inválido.', 'danger')
+        else:
+            # Cria um marcador para a conta se nenhum lucro for passado de inicio
+            novo_lucro = LucroOperacao(
+                nome_conta=nome_conta,
+                nome_aposta='',
+                valor_lucro=0.0,
+                user_id=session['user_id']
+            )
+            db.session.add(novo_lucro)
+            db.session.commit()
+
+    return redirect(url_for('index'))
+
+@app.route('/adicionar_lucro_direto', methods=['POST'])
+def adicionar_lucro_direto():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+        
+    nome_conta = request.form.get('nome_conta', '').strip()
     nome_aposta = request.form.get('nome_aposta', '').strip()
     valor_texto = request.form.get('valor_lucro')
     
@@ -141,7 +180,7 @@ def adicionar_lucro():
             db.session.add(novo_lucro)
             db.session.commit()
         except ValueError:
-            flash('Valor de lucro inválido.', 'danger')
+            flash('Valor inválido.', 'danger')
             
     return redirect(url_for('index'))
 
@@ -223,10 +262,8 @@ def logout():
     session.clear()
     return redirect(url_for('login'))
 
-# INICIALIZAÇÃO E CORREÇÃO AUTOMÁTICA DE ESTRUTURA DO BANCO
 with app.app_context():
     db.create_all()
-    # Adiciona a coluna faltante caso a tabela já existisse
     try:
         db.session.execute(text("ALTER TABLE lucro_operacao ADD COLUMN nome_aposta VARCHAR(100) DEFAULT 'Entrada'"))
         db.session.commit()
