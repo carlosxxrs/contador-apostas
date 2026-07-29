@@ -46,11 +46,11 @@
         .conta-total { color: #04d361; font-weight: bold; font-size: 16px; margin-top: 5px; }
 
         .form-lucro-conta { display: flex; gap: 8px; margin-bottom: 12px; background: #121214; padding: 10px; border-radius: 6px; border: 1px solid #29292e; flex-wrap: wrap; }
-        .form-lucro-conta input { flex: 1; min-width: 110px; padding: 8px; border-radius: 4px; border: 1px solid #29292e; background: #202024; color: white; font-size: 13px; }
+        .form-lucro-conta input { flex: 1; min-width: 100px; padding: 8px; border-radius: 4px; border: 1px solid #29292e; background: #202024; color: white; font-size: 13px; }
 
         .lucro-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px dashed #29292e; font-size: 15px; }
-        .lucro-item-info { display: flex; gap: 10px; align-items: center; }
-        .data-tag { font-size: 11px; background: #29292e; color: #a8a8b3; padding: 2px 6px; border-radius: 4px; }
+        .lucro-item-info { display: flex; gap: 8px; align-items: center; }
+        .data-tag { font-size: 11px; background: #29292e; color: #04d361; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
         
         .btn-limpar { background: #323238; color: #a8a8b3; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; }
         .btn-limpar:hover { background: #f75a68; color: white; }
@@ -133,7 +133,7 @@
                 <input type="text" name="nome_conta" placeholder="Nome da Conta (Criar nova conta)" required>
                 <input type="text" name="nome_aposta" placeholder="Nome da Aposta (Opcional)">
                 <input type="number" step="0.01" name="valor_lucro" placeholder="Lucro da aposta (R$)">
-                <input type="date" name="data_registro" title="Data da aposta (Opcional)">
+                <input type="text" name="data_registro" placeholder="Data (ex: 29/07)">
                 <button type="submit" class="btn-add" style="background: #04d361;">+ Criar / Add</button>
             </form>
 
@@ -157,7 +157,7 @@
                             <input type="hidden" name="nome_conta" value="{{ nome_conta }}">
                             <input type="text" name="nome_aposta" placeholder="Nome da Aposta" required>
                             <input type="number" step="0.01" name="valor_lucro" placeholder="Lucro (R$)" required>
-                            <input type="date" name="data_registro" title="Escolha a data (Opcional - padrão hoje)">
+                            <input type="text" name="data_registro" placeholder="Data (ex: 29/07)">
                             <button type="submit" class="btn-add" style="background: #04d361; padding: 8px 14px; font-size: 13px;">+ Add Lucro</button>
                         </form>
 
@@ -166,15 +166,16 @@
                             <div class="lucro-item">
                                 <div id="lucro-view-{{ item.id }}" class="lucro-item-info">
                                     {% if item.data_registro %}
-                                        <span class="data-tag">{{ item.data_registro }}</span>
+                                        <span class="data-tag">[{{ item.data_registro }}]</span>
                                     {% endif %}
                                     <span><strong>{{ item.nome_aposta }}</strong> = <span style="color:#04d361;">R$ {{ "%.2f"|format(item.valor_lucro) }}</span></span>
                                     <button class="btn-pencil" onclick="habilitarEdicaoLucro('{{ item.id }}')">✏️</button>
                                 </div>
 
                                 <form id="lucro-form-{{ item.id }}" class="edit-form" method="POST" action="/editar_lucro/{{ item.id }}">
-                                    <input type="text" name="novo_nome_aposta" class="input-mini" style="width:110px; color:white;" value="{{ item.nome_aposta }}" required>
+                                    <input type="text" name="novo_nome_aposta" class="input-mini" style="width:100px; color:white;" value="{{ item.nome_aposta }}" required>
                                     <input type="number" step="0.01" name="novo_valor_lucro" class="input-mini" value="{{ "%.2f"|format(item.valor_lucro) }}" required>
+                                    <input type="text" name="nova_data_registro" class="input-mini" style="width:70px; color:#a8a8b3;" value="{{ item.data_registro or '' }}" placeholder="Data">
                                     <button type="submit" class="btn-mini-save">✓</button>
                                 </form>
 
