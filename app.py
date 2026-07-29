@@ -225,7 +225,8 @@ def logout():
     return redirect(url_for('login'))
 
 with app.app_context():
-    db.create_all()
+    db.drop_all()  # Limpa a estrutura antiga com erro
+    db.create_all()  # Recria as tabelas com os novos campos
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
