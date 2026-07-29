@@ -50,7 +50,7 @@ class LucroOperacao(db.Model):
     nome_conta = db.Column(db.String(100), nullable=False)
     nome_aposta = db.Column(db.String(100), nullable=False, default='Entrada')
     valor_lucro = db.Column(db.Float, nullable=False)
-    data_registro = db.Column(db.String(20), nullable=True, default=lambda: datetime.now().strftime('%d/%m/%Y'))
+    data_registro = db.Column(db.String(50), nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
 # --- ROTAS PRINCIPAIS ---
@@ -63,7 +63,6 @@ def index():
     user_apostas = Aposta.query.filter_by(user_id=user_id).order_by(Aposta.id.asc()).all()
     total_investido = sum(aposta.valor for aposta in user_apostas)
     
-    # Agrupar Lucros por Nome da Conta
     user_lucros = LucroOperacao.query.filter_by(user_id=user_id).order_by(LucroOperacao.id.asc()).all()
     
     contas_lucro = {}
@@ -71,7 +70,6 @@ def index():
         if item.nome_conta not in contas_lucro:
             contas_lucro[item.nome_conta] = {'itens': [], 'total': 0.0}
         
-        # Filtra os itens vazios criados apenas ao registrar uma nova conta
         if item.nome_aposta and item.valor_lucro is not None:
             contas_lucro[item.nome_conta]['itens'].append(item)
             contas_lucro[item.nome_conta]['total'] += item.valor_lucro
@@ -133,16 +131,11 @@ def criar_conta_lucro():
     nome_conta = request.form.get('nome_conta', '').strip().upper()
     nome_aposta = request.form.get('nome_aposta', '').strip()
     valor_texto = request.form.get('valor_lucro')
-    data_input = request.form.get('data_registro')
+    data_input = request.form.get('data_registro', '').strip()
     
-    # Formata a data escolhida ou pega a data atual
-    if data_input:
-        try:
-            data_formatada = datetime.strptime(data_input, '%Y-%m-%d').strftime('%d/%m/%Y')
-        except ValueError:
-            data_formatada = datetime.now().strftime('%d/%m/%Y')
-    else:
-        data_formatada = datetime.now().strftime('%d/%m/%Y')
+    # Se não digitou nada, coloca a data de hoje formatada
+    if not data_input:
+        data_input = datetime.now().strftime('%d/%m/%Y')
 
     if nome_conta:
         if nome_aposta and valor_texto:
@@ -152,7 +145,7 @@ def criar_conta_lucro():
                     nome_conta=nome_conta, 
                     nome_aposta=nome_aposta, 
                     valor_lucro=valor, 
-                    data_registro=data_formatada,
+                    data_registro=data_input,
                     user_id=session['user_id']
                 )
                 db.session.add(novo_lucro)
@@ -164,7 +157,7 @@ def criar_conta_lucro():
                 nome_conta=nome_conta,
                 nome_aposta='',
                 valor_lucro=0.0,
-                data_registro=data_formatada,
+                data_registro=data_input,
                 user_id=session['user_id']
             )
             db.session.add(novo_lucro)
@@ -180,15 +173,10 @@ def adicionar_lucro_direto():
     nome_conta = request.form.get('nome_conta', '').strip()
     nome_aposta = request.form.get('nome_aposta', '').strip()
     valor_texto = request.form.get('valor_lucro')
-    data_input = request.form.get('data_registro')
+    data_input = request.form.get('data_registro', '').strip()
     
-    if data_input:
-        try:
-            data_formatada = datetime.strptime(data_input, '%Y-%m-%d').strftime('%d/%m/%Y')
-        except ValueError:
-            data_formatada = datetime.now().strftime('%d/%m/%Y')
-    else:
-        data_formatada = datetime.now().strftime('%d/%m/%Y')
+    if not data_input:
+        data_input = datetime.now().strftime('%d/%m/%Y')
 
     if nome_conta and nome_aposta and valor_texto:
         try:
@@ -197,7 +185,7 @@ def adicionar_lucro_direto():
                 nome_conta=nome_conta, 
                 nome_aposta=nome_aposta, 
                 valor_lucro=valor, 
-                data_registro=data_formatada,
+                data_registro=data_input,
                 user_id=session['user_id']
             )
             db.session.add(novo_lucro)
@@ -216,10 +204,13 @@ def editar_lucro(id):
     if lucro.user_id == session['user_id']:
         novo_nome = request.form.get('novo_nome_aposta')
         novo_valor = request.form.get('novo_valor_lucro')
+        nova_data = request.form.get('nova_data_registro')
         if novo_nome and novo_valor:
             try:
                 lucro.nome_aposta = novo_nome
                 lucro.valor_lucro = float(novo_valor)
+                if nova_data is not None:
+                    lucro.data_registro = nova_data.strip()
                 db.session.commit()
             except ValueError:
                 flash('Valor inválido.', 'danger')
@@ -288,7 +279,7 @@ def logout():
 with app.app_context():
     db.create_all()
     try:
-        db.session.execute(text("ALTER TABLE lucro_operacao ADD COLUMN data_registro VARCHAR(20)"))
+        db.session.execute(text("ALTER TABLE lucro_operacao ADD COLUMN data_registro VARCHAR(50)"))
         db.session.commit()
     except Exception:
         db.session.rollback()
