@@ -2,7 +2,7 @@ import os
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
-from sqlalchemy import event
+from sqlalchemy import event, text
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'uma_chave_super_secreta_e_segura_123'
@@ -44,11 +44,10 @@ class Aposta(db.Model):
     valor = db.Column(db.Float, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
-# Modelo atualizado para permitir nome de aposta e múltiplas contas
 class LucroOperacao(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nome_conta = db.Column(db.String(100), nullable=False)
-    nome_aposta = db.Column(db.String(100), nullable=False)
+    nome_aposta = db.Column(db.String(100), nullable=False, default='Entrada')
     valor_lucro = db.Column(db.Float, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
@@ -224,9 +223,15 @@ def logout():
     session.clear()
     return redirect(url_for('login'))
 
+# INICIALIZAÇÃO E CORREÇÃO AUTOMÁTICA DE ESTRUTURA DO BANCO
 with app.app_context():
-    db.drop_all()  # Limpa a estrutura antiga com erro
-    db.create_all()  # Recria as tabelas com os novos campos
+    db.create_all()
+    # Adiciona a coluna faltante caso a tabela já existisse
+    try:
+        db.session.execute(text("ALTER TABLE lucro_operacao ADD COLUMN nome_aposta VARCHAR(100) DEFAULT 'Entrada'"))
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
