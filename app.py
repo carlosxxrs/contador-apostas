@@ -44,36 +44,39 @@ class Aposta(db.Model):
     valor = db.Column(db.Float, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
-# Novo modelo exclusivo para o bloco de lucro operado
+# Modelo atualizado para permitir nome de aposta e múltiplas contas
 class LucroOperacao(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nome_conta = db.Column(db.String(100), nullable=False)
+    nome_aposta = db.Column(db.String(100), nullable=False)
     valor_lucro = db.Column(db.Float, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
-# --- ROTAS ---
+# --- ROTAS PRINCIPAIS ---
 @app.route('/')
 def index():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     user_id = session['user_id']
     
-    # Busca dados principais
     user_apostas = Aposta.query.filter_by(user_id=user_id).order_by(Aposta.id.asc()).all()
     total_investido = sum(aposta.valor for aposta in user_apostas)
     
-    # Busca registros do bloco de Lucro da Conta
+    # Agrupar Lucros por Nome da Conta
     user_lucros = LucroOperacao.query.filter_by(user_id=user_id).order_by(LucroOperacao.id.asc()).all()
-    nome_conta_atual = user_lucros[0].nome_conta if user_lucros else ""
-    total_lucro_operacao = sum(item.valor_lucro for item in user_lucros)
     
+    contas_lucro = {}
+    for item in user_lucros:
+        if item.nome_conta not in contas_lucro:
+            contas_lucro[item.nome_conta] = {'itens': [], 'total': 0.0}
+        contas_lucro[item.nome_conta]['itens'].append(item)
+        contas_lucro[item.nome_conta]['total'] += item.valor_lucro
+
     return render_template(
         'index.html', 
         apostas=user_apostas, 
         total=total_investido,
-        lucros=user_lucros,
-        nome_conta_atual=nome_conta_atual,
-        total_lucro_operacao=total_lucro_operacao
+        contas_lucro=contas_lucro
     )
 
 @app.route('/adicionar_aposta', methods=['POST'])
@@ -117,19 +120,25 @@ def editar_aposta(id):
                 flash('Valor inválido.', 'danger')
     return redirect(url_for('index'))
 
-# --- ROTAS DO BLOCO DE LUCRO INDEPENDENTE ---
+# --- ROTAS DO BLOCO DE LUCRO DA CONTA ---
 @app.route('/adicionar_lucro', methods=['POST'])
 def adicionar_lucro():
     if 'user_id' not in session:
         return redirect(url_for('login'))
         
-    nome_conta = request.form.get('nome_conta')
+    nome_conta = request.form.get('nome_conta', '').strip().upper()
+    nome_aposta = request.form.get('nome_aposta', '').strip()
     valor_texto = request.form.get('valor_lucro')
     
-    if nome_conta and valor_texto:
+    if nome_conta and nome_aposta and valor_texto:
         try:
             valor = float(valor_texto)
-            novo_lucro = LucroOperacao(nome_conta=nome_conta, valor_lucro=valor, user_id=session['user_id'])
+            novo_lucro = LucroOperacao(
+                nome_conta=nome_conta, 
+                nome_aposta=nome_aposta, 
+                valor_lucro=valor, 
+                user_id=session['user_id']
+            )
             db.session.add(novo_lucro)
             db.session.commit()
         except ValueError:
@@ -137,14 +146,44 @@ def adicionar_lucro():
             
     return redirect(url_for('index'))
 
-@app.route('/limpar_lucros', methods=['POST'])
-def limpar_lucros():
+@app.route('/editar_lucro/<int:id>', methods=['POST'])
+def editar_lucro(id):
     if 'user_id' not in session:
         return redirect(url_for('login'))
     
-    # Apaga apenas os registros de lucros operados pelo usuário
-    LucroOperacao.query.filter_by(user_id=session['user_id']).delete()
-    db.session.commit()
+    lucro = LucroOperacao.query.get_or_404(id)
+    if lucro.user_id == session['user_id']:
+        novo_nome = request.form.get('novo_nome_aposta')
+        novo_valor = request.form.get('novo_valor_lucro')
+        if novo_nome and novo_valor:
+            try:
+                lucro.nome_aposta = novo_nome
+                lucro.valor_lucro = float(novo_valor)
+                db.session.commit()
+            except ValueError:
+                flash('Valor inválido.', 'danger')
+    return redirect(url_for('index'))
+
+@app.route('/deletar_lucro/<int:id>', methods=['POST'])
+def deletar_lucro(id):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    lucro = LucroOperacao.query.get_or_404(id)
+    if lucro.user_id == session['user_id']:
+        db.session.delete(lucro)
+        db.session.commit()
+    return redirect(url_for('index'))
+
+@app.route('/limpar_conta_lucro', methods=['POST'])
+def limpar_conta_lucro():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    nome_conta = request.form.get('nome_conta')
+    if nome_conta:
+        LucroOperacao.query.filter_by(user_id=session['user_id'], nome_conta=nome_conta).delete()
+        db.session.commit()
     return redirect(url_for('index'))
 
 # --- AUTENTICAÇÃO ---
