@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -49,6 +50,7 @@ class LucroOperacao(db.Model):
     nome_conta = db.Column(db.String(100), nullable=False)
     nome_aposta = db.Column(db.String(100), nullable=False, default='Entrada')
     valor_lucro = db.Column(db.Float, nullable=False)
+    data_registro = db.Column(db.String(20), nullable=True, default=lambda: datetime.now().strftime('%d/%m/%Y'))
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
 # --- ROTAS PRINCIPAIS ---
@@ -131,7 +133,17 @@ def criar_conta_lucro():
     nome_conta = request.form.get('nome_conta', '').strip().upper()
     nome_aposta = request.form.get('nome_aposta', '').strip()
     valor_texto = request.form.get('valor_lucro')
+    data_input = request.form.get('data_registro')
     
+    # Formata a data escolhida ou pega a data atual
+    if data_input:
+        try:
+            data_formatada = datetime.strptime(data_input, '%Y-%m-%d').strftime('%d/%m/%Y')
+        except ValueError:
+            data_formatada = datetime.now().strftime('%d/%m/%Y')
+    else:
+        data_formatada = datetime.now().strftime('%d/%m/%Y')
+
     if nome_conta:
         if nome_aposta and valor_texto:
             try:
@@ -140,6 +152,7 @@ def criar_conta_lucro():
                     nome_conta=nome_conta, 
                     nome_aposta=nome_aposta, 
                     valor_lucro=valor, 
+                    data_registro=data_formatada,
                     user_id=session['user_id']
                 )
                 db.session.add(novo_lucro)
@@ -147,11 +160,11 @@ def criar_conta_lucro():
             except ValueError:
                 flash('Valor inválido.', 'danger')
         else:
-            # Cria um marcador para a conta se nenhum lucro for passado de inicio
             novo_lucro = LucroOperacao(
                 nome_conta=nome_conta,
                 nome_aposta='',
                 valor_lucro=0.0,
+                data_registro=data_formatada,
                 user_id=session['user_id']
             )
             db.session.add(novo_lucro)
@@ -167,7 +180,16 @@ def adicionar_lucro_direto():
     nome_conta = request.form.get('nome_conta', '').strip()
     nome_aposta = request.form.get('nome_aposta', '').strip()
     valor_texto = request.form.get('valor_lucro')
+    data_input = request.form.get('data_registro')
     
+    if data_input:
+        try:
+            data_formatada = datetime.strptime(data_input, '%Y-%m-%d').strftime('%d/%m/%Y')
+        except ValueError:
+            data_formatada = datetime.now().strftime('%d/%m/%Y')
+    else:
+        data_formatada = datetime.now().strftime('%d/%m/%Y')
+
     if nome_conta and nome_aposta and valor_texto:
         try:
             valor = float(valor_texto)
@@ -175,6 +197,7 @@ def adicionar_lucro_direto():
                 nome_conta=nome_conta, 
                 nome_aposta=nome_aposta, 
                 valor_lucro=valor, 
+                data_registro=data_formatada,
                 user_id=session['user_id']
             )
             db.session.add(novo_lucro)
@@ -265,7 +288,7 @@ def logout():
 with app.app_context():
     db.create_all()
     try:
-        db.session.execute(text("ALTER TABLE lucro_operacao ADD COLUMN nome_aposta VARCHAR(100) DEFAULT 'Entrada'"))
+        db.session.execute(text("ALTER TABLE lucro_operacao ADD COLUMN data_registro VARCHAR(20)"))
         db.session.commit()
     except Exception:
         db.session.rollback()
