@@ -12,7 +12,6 @@
         .header { display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 800px; margin-bottom: 20px; border-bottom: 1px solid #29292e; padding-bottom: 15px; gap: 10px; }
         .header h1 { margin: 0; font-size: 20px; color: #04d361; }
         .btn-logout { background: #f75a68; color: white; border: none; padding: 8px 14px; border-radius: 4px; font-weight: bold; cursor: pointer; text-decoration: none; font-size: 13px; white-space: nowrap; }
-        .btn-logout:hover { background: #c54754; }
         
         .summary-card { background: #202024; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); margin-bottom: 20px; border-left: 5px solid #8257e5; box-sizing: border-box; }
         .summary-card h3 { margin: 0 0 5px 0; color: #a8a8b3; font-size: 12px; text-transform: uppercase; }
@@ -21,14 +20,11 @@
         .form-card { background: #202024; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); margin-bottom: 20px; box-sizing: border-box; }
         .form-card h2 { margin-top: 0; font-size: 16px; margin-bottom: 15px; color: #e1e1e6; }
         
-        /* Formulário adaptável flexbox */
         .form-inline { display: flex; gap: 10px; flex-direction: row; flex-wrap: wrap; }
         .form-inline input { flex: 1; min-width: 140px; padding: 12px; border-radius: 4px; border: 1px solid #29292e; background: #121214; color: white; box-sizing: border-box; font-size: 15px; }
         .btn-add { background: #8257e5; color: white; border: none; padding: 12px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 15px; width: auto; }
-        .btn-add:hover { background: #9466ff; }
 
-        /* Tabela com rolagem horizontal interna se a tela for muito pequena */
-        .table-card { background: #202024; padding: 15px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); width: 100%; box-sizing: border-box; overflow-x: auto; }
+        .table-card { background: #202024; padding: 15px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); width: 100%; box-sizing: border-box; overflow-x: auto; margin-bottom: 25px; }
         table { width: 100%; border-collapse: collapse; text-align: left; min-width: 450px; }
         th, td { padding: 12px 10px; border-bottom: 1px solid #29292e; vertical-align: middle; font-size: 14px; }
         th { color: #a8a8b3; font-weight: normal; }
@@ -39,18 +35,22 @@
         .edit-form { display: none; gap: 5px; align-items: center; }
         .input-mini { width: 80px; padding: 6px; border-radius: 4px; border: 1px solid #29292e; background: #121214; color: #04d361; font-weight: bold; font-size: 14px; }
         .btn-mini-save { background: #04d361; border: none; color: white; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: bold; }
-        
         .btn-delete { background: #f75a68; border: none; color: white; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 13px; }
-        .no-data { text-align: center; color: #a8a8b3; padding: 30px; }
 
-        /* REGRAS EXCLUSIVAS PARA CELULAR (Telas menores que 600px) */
+        /* ESTILOS DO BLOCO DE LUCRO DA CONTA OPERADA */
+        .lucro-section { background: #18181b; border: 1px solid #29292e; padding: 20px; border-radius: 8px; box-sizing: border-box; }
+        .lucro-section h2 { margin: 0 0 15px 0; font-size: 20px; color: #ffffff; letter-spacing: 1px; }
+        .lucro-conta-title { font-size: 16px; margin-bottom: 10px; color: #e1e1e6; }
+        .lucro-total-destaque { font-size: 18px; font-weight: bold; color: #04d361; margin-bottom: 15px; }
+        .lucro-lista { list-style: none; padding: 0; margin: 0 0 20px 0; }
+        .lucro-lista li { font-size: 16px; padding: 6px 0; border-bottom: 1px dashed #29292e; color: #e1e1e6; }
+        .btn-limpar { background: #323238; color: #a8a8b3; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; margin-top: 10px; }
+        .btn-limpar:hover { background: #f75a68; color: white; }
+
         @media (max-width: 600px) {
-            .header h1 { font-size: 18px; }
             .form-inline { flex-direction: column; gap: 12px; }
             .form-inline input { width: 100%; }
             .btn-add { width: 100%; padding: 14px; }
-            th, td { padding: 10px 6px; font-size: 13px; }
-            .input-mini { width: 70px; }
         }
     </style>
 </head>
@@ -62,8 +62,9 @@
     </div>
 
     <div class="container">
+        <!-- Card Superior (Total Principal) -->
         <div class="summary-card">
-            <h3>Total Acumulado</h3>
+            <h3>TOTAL ACUMULADO</h3>
             <p>R$ {{ "%.2f"|format(total) }}</p>
         </div>
 
@@ -76,6 +77,7 @@
             </form>
         </div>
 
+        <!-- Tabela Principal -->
         <div class="table-card">
             <table>
                 <thead>
@@ -95,7 +97,6 @@
                                         <span>R$ {{ "%.2f"|format(aposta.valor) }}</span>
                                         <button class="btn-pencil" onclick="habilitarEdicao('{{ aposta.id }}')">✏️</button>
                                     </div>
-
                                     <form id="form-{{ aposta.id }}" class="edit-form" method="POST" action="/editar_aposta/{{ aposta.id }}">
                                         <input type="number" step="0.01" name="novo_valor" class="input-mini" value="{{ "%.2f"|format(aposta.valor) }}" required>
                                         <button type="submit" class="btn-mini-save">✓</button>
@@ -109,13 +110,46 @@
                             </tr>
                         {% endfor %}
                     {% else %}
-                        <tr>
-                            <td colspan="3" class="no-data">Nenhuma aposta cadastrada ainda.</td>
-                        </tr>
+                        <tr><td colspan="3" style="text-align:center; color:#a8a8b3;">Nenhuma aposta cadastrada.</td></tr>
                     {% endif %}
                 </tbody>
             </table>
         </div>
+
+        <!-- BLOCO EXCLUSIVO: CALCULADORA DE LUCRO DA CONTA OPERADA -->
+        <div class="lucro-section">
+            <h2>LUCRO</h2>
+            
+            <!-- Form para lançar o lucro individual -->
+            <form class="form-inline" method="POST" action="/adicionar_lucro" style="margin-bottom: 20px;">
+                <input type="text" name="nome_conta" placeholder="Nome da Conta (ex: BETANO LUAN)" value="{{ nome_conta_atual }}" required>
+                <input type="number" step="0.01" name="valor_lucro" placeholder="Lucro da aposta (R$)" required>
+                <button type="submit" class="btn-add" style="background: #04d361;">+ Add Lucro</button>
+            </form>
+
+            {% if lucros %}
+                <div class="lucro-conta-title">
+                    NOME DA CONTA: <strong><u>{{ nome_conta_atual }}</u></strong>
+                </div>
+
+                <div class="lucro-total-destaque">
+                    Total = <u>R$ {{ "%.2f"|format(total_lucro_operacao) }}</u> de lucro
+                </div>
+
+                <ul class="lucro-lista">
+                    {% for item in lucros %}
+                        <li><strong>{{ loop.index }} aposta</strong> = R$ {{ "%.2f"|format(item.valor_lucro) }}</li>
+                    {% endfor %}
+                </ul>
+
+                <form method="POST" action="/limpar_lucros" onsubmit="return confirm('Limpar os lucros dessa conta?');">
+                    <button type="submit" class="btn-limpar">🗑️ Nova Operação (Limpar Lista)</button>
+                </form>
+            {% else %}
+                <p style="color: #a8a8b3; margin: 0; font-size: 14px;">Digite o nome da conta e os lucros para calcular a operação atual.</p>
+            {% endif %}
+        </div>
+
     </div>
 
     <script>
