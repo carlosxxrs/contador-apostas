@@ -3,205 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel - Gerenciador de Apostas</title>
+    <title>Painel - Apostas & Lucros</title>
     <style>
-        body { background-color: #121214; color: white; font-family: sans-serif; margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; box-sizing: border-box; }
-        .container { width: 100%; max-width: 800px; margin-top: 10px; box-sizing: border-box; }
-        
-        .header { display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 800px; margin-bottom: 20px; border-bottom: 1px solid #29292e; padding-bottom: 15px; gap: 10px; }
-        .header h1 { margin: 0; font-size: 20px; color: #04d361; }
-        .btn-logout { background: #f75a68; color: white; border: none; padding: 8px 14px; border-radius: 4px; font-weight: bold; cursor: pointer; text-decoration: none; font-size: 13px; white-space: nowrap; }
-        
-        .summary-card { background: #202024; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); margin-bottom: 20px; border-left: 5px solid #8257e5; box-sizing: border-box; }
-        .summary-card h3 { margin: 0 0 5px 0; color: #a8a8b3; font-size: 12px; text-transform: uppercase; }
-        .summary-card p { margin: 0; font-size: 26px; font-weight: bold; color: #ffffff; }
-
-        .form-card { background: #202024; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); margin-bottom: 20px; box-sizing: border-box; }
-        .form-card h2 { margin-top: 0; font-size: 16px; margin-bottom: 15px; color: #e1e1e6; }
-        
-        .form-inline { display: flex; gap: 10px; flex-direction: row; flex-wrap: wrap; }
-        .form-inline input { flex: 1; min-width: 120px; padding: 12px; border-radius: 4px; border: 1px solid #29292e; background: #121214; color: white; box-sizing: border-box; font-size: 14px; }
-        .btn-add { background: #8257e5; color: white; border: none; padding: 12px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 14px; white-space: nowrap; }
-
-        .table-card { background: #202024; padding: 15px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); width: 100%; box-sizing: border-box; overflow-x: auto; margin-bottom: 25px; }
-        table { width: 100%; border-collapse: collapse; text-align: left; min-width: 450px; }
-        th, td { padding: 12px 10px; border-bottom: 1px solid #29292e; vertical-align: middle; font-size: 14px; }
-        th { color: #a8a8b3; font-weight: normal; }
-        
-        .value-view { display: flex; align-items: center; gap: 8px; color: #04d361; font-weight: bold; }
-        .btn-pencil { background: none; border: none; cursor: pointer; font-size: 14px; padding: 4px 8px; border-radius: 4px; background-color: #29292e; }
-
-        .edit-form { display: none; gap: 5px; align-items: center; }
-        .input-mini { width: 80px; padding: 6px; border-radius: 4px; border: 1px solid #29292e; background: #121214; color: #04d361; font-weight: bold; font-size: 14px; }
-        .btn-mini-save { background: #04d361; border: none; color: white; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: bold; }
-        .btn-delete { background: #f75a68; border: none; color: white; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 13px; }
-
-        /* BLOCO DE LUCRO DA CONTA */
-        .lucro-section { background: #18181b; border: 1px solid #29292e; padding: 20px; border-radius: 8px; box-sizing: border-box; margin-bottom: 20px; }
-        .lucro-section h2 { margin: 0 0 15px 0; font-size: 20px; color: #ffffff; }
-        
-        .conta-box { background: #202024; border: 1px solid #29292e; border-radius: 6px; padding: 15px; margin-top: 15px; }
-        .conta-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #29292e; padding-bottom: 10px; margin-bottom: 10px; }
-        .conta-title { font-size: 18px; color: #ffffff; font-weight: bold; text-decoration: underline; }
-        .conta-total { color: #04d361; font-weight: bold; font-size: 16px; margin-top: 5px; }
-
-        .form-lucro-conta { display: flex; gap: 8px; margin-bottom: 12px; background: #121214; padding: 10px; border-radius: 6px; border: 1px solid #29292e; flex-wrap: wrap; }
-        .form-lucro-conta input { flex: 1; min-width: 100px; padding: 8px; border-radius: 4px; border: 1px solid #29292e; background: #202024; color: white; font-size: 13px; }
-
-        .lucro-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px dashed #29292e; font-size: 15px; }
-        .lucro-item-info { display: flex; gap: 8px; align-items: center; }
-        .data-tag { font-size: 11px; background: #29292e; color: #04d361; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
-        
-        .btn-limpar { background: #323238; color: #a8a8b3; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; }
-        .btn-limpar:hover { background: #f75a68; color: white; }
-
-        @media (max-width: 600px) {
-            .form-inline, .form-lucro-conta { flex-direction: column; gap: 10px; }
-            .form-inline input, .form-lucro-conta input { width: 100%; }
-            .btn-add { width: 100%; padding: 12px; }
-        }
+        body { font-family: Arial, sans-serif; background: #121212; color: #fff; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .card { background: #1e1e1e; padding: 20px; margin-bottom: 20px; border-radius: 8px; }
+        h1, h2, h3 { color: #00e676; }
+        input { padding: 8px; margin: 5px; background: #2a2a2a; border: 1px solid #333; color: #fff; border-radius: 4px; }
+        button { padding: 8px 15px; background: #00e676; border: none; font-weight: bold; cursor: pointer; border-radius: 4px; color: #121212; }
+        .btn-danger { background: #ff5252; color: white; }
+        a { color: #00e676; text-decoration: none; }
+        .flash { background: #ff5252; color: white; padding: 10px; border-radius: 4px; margin-bottom: 15px; }
     </style>
 </head>
 <body>
-
-    <div class="header">
-        <h1>📊 Contador de Apostas</h1>
-        <a href="/logout" class="btn-logout">Sair</a>
-    </div>
-
     <div class="container">
-        <!-- Card Superior -->
-        <div class="summary-card">
-            <h3>TOTAL ACUMULADO</h3>
-            <p>R$ {{ "%.2f"|format(total) }}</p>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h1>Painel de Controle</h1>
+            <a href="/logout"><button class="btn-danger">Sair</button></a>
         </div>
 
-        <div class="form-card">
-            <h2>Adicionar Nova Entrada</h2>
-            <form class="form-inline" method="POST" action="/adicionar_aposta">
-                <input type="text" name="casa" placeholder="Nome da Plataforma" required>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="flash">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <!-- Bloco de Apostas -->
+        <div class="card">
+            <h2>Cadastrar Aposta</h2>
+            <form action="/adicionar_aposta" method="POST">
+                <input type="text" name="casa" placeholder="Casa de Aposta" required>
                 <input type="number" step="0.01" name="valor" placeholder="Valor (R$)" required>
-                <button type="submit" class="btn-add">Salvar Registro</button>
-            </form>
-        </div>
-
-        <!-- Tabela Principal -->
-        <div class="table-card">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Plataforma</th>
-                        <th>Valor Registrado</th>
-                        <th style="text-align: right;">Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% if apostas %}
-                        {% for aposta in apostas %}
-                            <tr>
-                                <td>{{ aposta.casa }}</td>
-                                <td>
-                                    <div id="view-{{ aposta.id }}" class="value-view">
-                                        <span>R$ {{ "%.2f"|format(aposta.valor) }}</span>
-                                        <button class="btn-pencil" onclick="habilitarEdicao('{{ aposta.id }}')">✏️</button>
-                                    </div>
-                                    <form id="form-{{ aposta.id }}" class="edit-form" method="POST" action="/editar_aposta/{{ aposta.id }}">
-                                        <input type="number" step="0.01" name="novo_valor" class="input-mini" value="{{ "%.2f"|format(aposta.valor) }}" required>
-                                        <button type="submit" class="btn-mini-save">✓</button>
-                                    </form>
-                                </td>
-                                <td style="text-align: right;">
-                                    <form method="POST" action="/deletar_aposta/{{ aposta.id }}" style="display:inline;" onsubmit="return confirm('Deseja mesmo remover?');">
-                                        <button type="submit" class="btn-delete">Remover</button>
-                                    </form>
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    {% else %}
-                        <tr><td colspan="3" style="text-align:center; color:#a8a8b3;">Nenhuma aposta cadastrada.</td></tr>
-                    {% endif %}
-                </tbody>
-            </table>
-        </div>
-
-        <!-- BLOCO DE LUCRO POR CONTA -->
-        <div class="lucro-section">
-            <h2>LUCRO</h2>
-            
-            <!-- Criar Nova Conta -->
-            <form class="form-inline" method="POST" action="/criar_conta_lucro">
-                <input type="text" name="nome_conta" placeholder="Nome da Conta (Criar nova conta)" required>
-                <input type="text" name="nome_aposta" placeholder="Nome da Aposta (Opcional)">
-                <input type="number" step="0.01" name="valor_lucro" placeholder="Lucro da aposta (R$)">
-                <input type="text" name="data_registro" placeholder="Data (ex: 29/07)">
-                <button type="submit" class="btn-add" style="background: #04d361;">+ Criar / Add</button>
+                <button type="submit">Adicionar</button>
             </form>
 
-            <!-- Exibição de cada Conta cadastrada separadamente -->
-            {% if contas_lucro %}
-                {% for nome_conta, dados in contas_lucro.items() %}
-                    <div class="conta-box">
-                        <div class="conta-header">
-                            <div>
-                                <div class="conta-title">{{ nome_conta }}</div>
-                                <div class="conta-total">TOTAL = R$ {{ "%.2f"|format(dados.total) }} de lucro</div>
-                            </div>
-                            <form method="POST" action="/limpar_conta_lucro" onsubmit="return confirm('Excluir toda a conta {{ nome_conta }}?');">
-                                <input type="hidden" name="nome_conta" value="{{ nome_conta }}">
-                                <button type="submit" class="btn-limpar">🗑️ Apagar Conta</button>
-                            </form>
-                        </div>
-
-                        <!-- Opção de Adicionar Lucro Direto na Conta -->
-                        <form class="form-lucro-conta" method="POST" action="/adicionar_lucro_direto">
-                            <input type="hidden" name="nome_conta" value="{{ nome_conta }}">
-                            <input type="text" name="nome_aposta" placeholder="Nome da Aposta" required>
-                            <input type="number" step="0.01" name="valor_lucro" placeholder="Lucro (R$)" required>
-                            <input type="text" name="data_registro" placeholder="Data (ex: 29/07)">
-                            <button type="submit" class="btn-add" style="background: #04d361; padding: 8px 14px; font-size: 13px;">+ Add Lucro</button>
+            <h3>Minhas Apostas (Total: R$ {{ "%.2f"|format(total) }})</h3>
+            <ul>
+                {% for aposta in apostas %}
+                    <li>
+                        {{ aposta.casa }} - R$ {{ "%.2f"|format(aposta.valor) }}
+                        <form action="/deletar_aposta/{{ aposta.id }}" method="POST" style="display:inline;">
+                            <button type="submit" class="btn-danger" style="padding: 2px 5px; font-size: 12px;">X</button>
                         </form>
-
-                        <!-- Lista dos Lucros dessa conta -->
-                        {% for item in dados.itens %}
-                            <div class="lucro-item">
-                                <div id="lucro-view-{{ item.id }}" class="lucro-item-info">
-                                    {% if item.data_registro %}
-                                        <span class="data-tag">[{{ item.data_registro }}]</span>
-                                    {% endif %}
-                                    <span><strong>{{ item.nome_aposta }}</strong> = <span style="color:#04d361;">R$ {{ "%.2f"|format(item.valor_lucro) }}</span></span>
-                                    <button class="btn-pencil" onclick="habilitarEdicaoLucro('{{ item.id }}')">✏️</button>
-                                </div>
-
-                                <form id="lucro-form-{{ item.id }}" class="edit-form" method="POST" action="/editar_lucro/{{ item.id }}">
-                                    <input type="text" name="novo_nome_aposta" class="input-mini" style="width:100px; color:white;" value="{{ item.nome_aposta }}" required>
-                                    <input type="number" step="0.01" name="novo_valor_lucro" class="input-mini" value="{{ "%.2f"|format(item.valor_lucro) }}" required>
-                                    <input type="text" name="nova_data_registro" class="input-mini" style="width:70px; color:#a8a8b3;" value="{{ item.data_registro or '' }}" placeholder="Data">
-                                    <button type="submit" class="btn-mini-save">✓</button>
-                                </form>
-
-                                <form method="POST" action="/deletar_lucro/{{ item.id }}" style="display:inline;">
-                                    <button type="submit" class="btn-delete" style="padding: 4px 8px;">Remover</button>
-                                </form>
-                            </div>
-                        {% endfor %}
-                    </div>
+                    </li>
                 {% endfor %}
-            {% else %}
-                <p style="color: #a8a8b3; margin-top: 15px; font-size: 14px;">Nenhuma conta de lucro cadastrada ainda.</p>
-            {% endif %}
+            </ul>
         </div>
 
-    </div>
+        <!-- Bloco de Lucros -->
+        <div class="card">
+            <h2>Criar / Adicionar Lucro por Conta</h2>
+            <form action="/criar_conta_lucro" method="POST">
+                <input type="text" name="nome_conta" placeholder="Nome da Conta (ex: BET365)" required>
+                <input type="text" name="nome_aposta" placeholder="Nome da Aposta/Entrada">
+                <input type="number" step="0.01" name="valor_lucro" placeholder="Valor do Lucro (R$)">
+                <input type="text" name="data_registro" placeholder="Data (DD/MM/AAAA)">
+                <button type="submit">Salvar Conta/Lucro</button>
+            </form>
 
-    <script>
-        function habilitarEdicao(id) {
-            document.getElementById('view-' + id).style.display = 'none';
-            document.getElementById('form-' + id).style.display = 'flex';
-        }
-        function habilitarEdicaoLucro(id) {
-            document.getElementById('lucro-view-' + id).style.display = 'none';
-            document.getElementById('lucro-form-' + id).style.display = 'flex';
-        }
-    </script>
+            <h3>Resumo de Lucros por Conta</h3>
+            {% for conta, dados in contas_lucro.items() %}
+                <div style="border-top: 1px solid #333; padding-top: 10px; margin-top: 10px;">
+                    <h4>Conta: {{ conta }} (Total: R$ {{ "%.2f"|format(dados.total) }})</h4>
+                    <ul>
+                        {% for item in dados.itens %}
+                            <li>
+                                {{ item.data_registro }} - {{ item.nome_aposta }}: R$ {{ "%.2f"|format(item.valor_lucro) }}
+                                <form action="/deletar_lucro/{{ item.id }}" method="POST" style="display:inline;">
+                                    <button type="submit" class="btn-danger" style="padding: 2px 5px; font-size: 12px;">X</button>
+                                </form>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                    <form action="/limpar_conta_lucro" method="POST">
+                        <input type="hidden" name="nome_conta" value="{{ conta }}">
+                        <button type="submit" class="btn-danger" style="font-size: 12px;">Limpar esta Conta</button>
+                    </form>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
 </body>
 </html>
