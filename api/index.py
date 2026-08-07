@@ -35,6 +35,17 @@ class Aposta(db.Model):
     valor = db.Column(db.Float, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
+# Função para garantir que as tabelas existam no Neon sem quebrar a Vercel
+def init_db():
+    try:
+        with app.app_context():
+            db.create_all()
+    except Exception as e:
+        print(f"Erro ao inicializar banco: {e}")
+
+# Executa a criação das tabelas ao carregar a aplicação
+init_db()
+
 # --- ROTAS ---
 
 @app.route('/')
@@ -42,14 +53,16 @@ def home():
     user_id = session.get('user_id')
     total_apostas = 0.0
     
-    # Se o usuário estiver logado, calcula as apostas do banco
     if user_id:
-        apostas = Aposta.query.filter_by(user_id=user_id).all()
-        total_apostas = sum(a.valor for a in apostas)
+        try:
+            apostas = Aposta.query.filter_by(user_id=user_id).all()
+            total_apostas = sum(a.valor for a in apostas)
+        except Exception:
+            db.session.rollback()
     
     try:
         return render_template('index.html', total=total_apostas, user_id=user_id)
-    except:
+    except Exception:
         return render_template('home.html', total=total_apostas, user_id=user_id)
 
 @app.route('/adicionar_aposta', methods=['POST'])
@@ -65,7 +78,7 @@ def adicionar_aposta():
             nova_aposta = Aposta(valor=float(valor), user_id=user_id)
             db.session.add(nova_aposta)
             db.session.commit()
-        except Exception as e:
+        except Exception:
             db.session.rollback()
 
     return redirect(url_for('home'))
@@ -76,13 +89,19 @@ def login():
         username = request.form.get('username')
         password = request.form.get('password')
         
-        user = User.query.filter_by(username=username, password=password).first()
-        if user:
-            session['user_id'] = user.id
-            session['username'] = user.username
-            return redirect(url_for('home'))
-        
-        flash('Usuário ou senha incorretos.')
+        try:
+            user = User.query.filter_by(username=username, password=password).first()
+            if user:
+                session['user_id'] = user.id
+                session['username'] = user.username
+                return redirect(url_for('home'))
+            flash('Usuário ou senha incorretos.')
+        except Exception as e:
+            db.session.rollback()
+            # Se a tabela não existia, tenta criar e pede para cadastrar novamente
+            init_db()
+            flash('Erro ao acessar o banco de dados. Tente cadastrar sua conta primeiro.')
+            
     return render_template('login.html')
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -91,21 +110,28 @@ def register():
         username = request.form.get('username')
         password = request.form.get('password')
         
-        if User.query.filter_by(username=username).first():
-            flash('Usuário já existe!')
-            return redirect(url_for('register'))
+        try:
+            init_db() # Garante tabelas criadas antes do registro
+            if User.query.filter_by(username=username).first():
+                flash('Usuário já existe!')
+                return redirect(url_for('register'))
+                
+            new_user = User(username=username, password=password)
+            db.session.add(new_user)
+            db.session.commit()
             
-        new_user = User(username=username, password=password)
-        db.session.add(new_user)
-        db.session.commit()
-        session['user_id'] = new_user.id
-        return redirect(url_for('home'))
+            session['user_id'] = new_user.id
+            session['username'] = new_user.username
+            return redirect(url_for('home'))
+        except Exception as e:
+            db.session.rollback()
+            flash('Erro ao registrar usuário. Tente novamente.')
         
     return render_template('register.html')
 
 @app.route('/logout')
 def logout():
-    session.clear()  # Limpa os dados de login salvos no navegador
+    session.clear()
     return redirect(url_for('home'))
 
 @app.route('/favicon.ico')
