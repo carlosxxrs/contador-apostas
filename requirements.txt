@@ -2,3 +2,4 @@ Flask
 Flask-SQLAlchemy
 pg8000
 Werkzeug
+gunicorn
