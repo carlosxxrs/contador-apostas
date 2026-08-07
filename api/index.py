@@ -9,7 +9,7 @@ TEMPLATE_DIR = os.path.join(BASE_DIR, 'templates')
 app = Flask(__name__, template_folder=TEMPLATE_DIR)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'chave_secreta_contador_apostas')
 
-# Configuração do Banco PostgreSQL (Neon)
+# Configuração da URL do Banco de Dados PostgreSQL (Neon)
 DATABASE_URL = os.getenv('DATABASE_URL')
 if DATABASE_URL:
     if DATABASE_URL.startswith("postgres://"):
@@ -35,15 +35,14 @@ class Aposta(db.Model):
     valor = db.Column(db.Float, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
-# Função para garantir que as tabelas existam no Neon sem quebrar a Vercel
+# Função para criar tabelas no Neon automaticamente
 def init_db():
     try:
         with app.app_context():
             db.create_all()
     except Exception as e:
-        print(f"Erro ao inicializar banco: {e}")
+        print(f"Erro no banco: {e}")
 
-# Executa a criação das tabelas ao carregar a aplicação
 init_db()
 
 # --- ROTAS ---
@@ -96,11 +95,9 @@ def login():
                 session['username'] = user.username
                 return redirect(url_for('home'))
             flash('Usuário ou senha incorretos.')
-        except Exception as e:
+        except Exception:
             db.session.rollback()
-            # Se a tabela não existia, tenta criar e pede para cadastrar novamente
-            init_db()
-            flash('Erro ao acessar o banco de dados. Tente cadastrar sua conta primeiro.')
+            flash('Erro ao consultar usuário.')
             
     return render_template('login.html')
 
@@ -111,7 +108,7 @@ def register():
         password = request.form.get('password')
         
         try:
-            init_db() # Garante tabelas criadas antes do registro
+            init_db()
             if User.query.filter_by(username=username).first():
                 flash('Usuário já existe!')
                 return redirect(url_for('register'))
@@ -125,7 +122,7 @@ def register():
             return redirect(url_for('home'))
         except Exception as e:
             db.session.rollback()
-            flash('Erro ao registrar usuário. Tente novamente.')
+            flash('Erro ao criar conta. Tente novamente.')
         
     return render_template('register.html')
 
