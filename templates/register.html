@@ -2,60 +2,122 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Criar Conta - Gerenciador de Apostas</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Criar Conta - Contador de Apostas</title>
     <style>
-        body { background-color: #121214; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .register-card { background: #202024; padding: 40px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); text-align: center; width: 320px; }
-        .input-group { position: relative; width: 100%; margin: 10px 0; }
-        input { width: 100%; padding: 12px; border-radius: 4px; border: 1px solid #29292e; background: #121214; color: white; box-sizing: border-box; }
-        .toggle-btn { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #a8a8b3; cursor: pointer; font-size: 12px; }
-        button[type="submit"] { width: 100%; padding: 12px; background: #04d361; border: none; color: white; font-weight: bold; border-radius: 4px; cursor: pointer; margin-top: 10px; }
-        button[type="submit"]:hover { background: #0ee96f; }
-        a { color: #a8a8b3; text-decoration: none; font-size: 14px; display: block; margin-top: 15px; }
-        .alert { background: #f75a68; color: white; padding: 10px; border-radius: 4px; font-size: 14px; margin-bottom: 15px; text-align: left; display: none; }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: #1e1e1e;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 350px;
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #00e676;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #333;
+            border-radius: 4px;
+            background-color: #2a2a2a;
+            color: #fff;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #00e676;
+            border: none;
+            border-radius: 4px;
+            color: #121212;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #00c853;
+        }
+        .flash-messages {
+            list-style: none;
+            padding: 10px;
+            margin-bottom: 15px;
+            background-color: #ff5252;
+            color: white;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .link {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+        .link a {
+            color: #00e676;
+            text-decoration: none;
+        }
+        .link a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
-    <div class="register-card">
-        <h2>Criar Nova Conta</h2>
-        
-        <div class="alert" id="js-alert"></div>
 
-        <form method="POST" action="/register" onsubmit="return validarSenhas()">
-            <div class="input-group">
-                <input type="text" name="username" placeholder="Escolha um Usuário" required>
+    <div class="container">
+        <h2>Criar Conta</h2>
+
+        <!-- Bloco que exibe os avisos e confirmações enviadas pelo Flask -->
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <ul class="flash-messages">
+            {% for message in messages %}
+              <li>{{ message }}</li>
+            {% endfor %}
+            </ul>
+          {% endif %}
+        {% endwith %}
+
+        <form action="/register" method="POST">
+            <div class="form-group">
+                <label for="username">Usuário ou E-mail</label>
+                <input type="text" id="username" name="username" placeholder="Digite seu usuário" required>
             </div>
-            <div class="input-group">
-                <input type="password" id="password" name="password" placeholder="Crie uma Senha" required>
-                <button type="button" class="toggle-btn" onclick="togglePassword('password')">Mostrar</button>
+            
+            <div class="form-group">
+                <label for="password">Senha</label>
+                <input type="password" id="password" name="password" placeholder="Digite sua senha" required>
             </div>
-            <div class="input-group">
-                <input type="password" id="confirm_password" placeholder="Confirme a Senha" required>
-                <button type="button" class="toggle-btn" onclick="togglePassword('confirm_password')">Mostrar</button>
-            </div>
-            <button type="submit">Cadastrar e Salvar</button>
+
+            <button type="submit">Cadastrar</button>
         </form>
-        <a href="/login">Já tem uma conta? Faça login</a>
+
+        <div class="link">
+            Já tem uma conta? <a href="/login">Fazer Login</a>
+        </div>
     </div>
 
-    <script>
-        function togglePassword(id) {
-            const input = document.getElementById(id);
-            input.type = input.type === "password" ? "text" : "password";
-        }
-
-        function validarSenhas() {
-            const senha = document.getElementById('password').value;
-            const confirmacao = document.getElementById('confirm_password').value;
-            const alertBox = document.getElementById('js-alert');
-
-            if (senha !== confirmacao) {
-                alertBox.textContent = "As senhas não coincidem!";
-                alertBox.style.display = "block";
-                return false;
-            }
-            return true;
-        }
-    </script>
 </body>
 </html>
