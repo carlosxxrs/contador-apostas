@@ -2,32 +2,52 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Gerenciador de Apostas</title>
     <style>
-        body { font-family: Arial, sans-serif; background: #121212; color: #fff; text-align: center; padding-top: 50px; }
-        .card { background: #1e1e1e; max-width: 350px; margin: 0 auto; padding: 20px; border-radius: 8px; }
-        input { width: 90%; padding: 10px; margin: 8px 0; background: #2a2a2a; border: 1px solid #333; color: #fff; border-radius: 4px; }
-        button { width: 95%; padding: 10px; background: #00e676; border: none; font-weight: bold; cursor: pointer; border-radius: 4px; color: #121212; margin-top: 10px; }
-        a { color: #00e676; text-decoration: none; }
-        .flash { background: #ff5252; color: white; padding: 8px; border-radius: 4px; margin-bottom: 10px; }
+        body { background-color: #121214; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+        .login-card { background: #202024; padding: 30px 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); text-align: center; width: 100%; max-width: 340px; box-sizing: border-box; }
+        .input-group { position: relative; width: 100%; margin: 12px 0; }
+        input { width: 100%; padding: 14px; border-radius: 4px; border: 1px solid #29292e; background: #121214; color: white; box-sizing: border-box; font-size: 16px; }
+        .toggle-btn { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #a8a8b3; cursor: pointer; font-size: 13px; }
+        button[type="submit"] { width: 100%; padding: 14px; background: #8257e5; border: none; color: white; font-weight: bold; border-radius: 4px; cursor: pointer; margin-top: 10px; font-size: 16px; }
+        button[type="submit"]:hover { background: #9466ff; }
+        a { color: #a8a8b3; text-decoration: none; font-size: 14px; display: block; margin-top: 18px; }
+        .alert { padding: 10px; border-radius: 4px; font-size: 14px; margin-bottom: 15px; text-align: left; color: white; }
+        .alert-danger { background: #f75a68; }
+        .alert-success { background: #04d361; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h2>Entrar</h2>
+    <div class="login-card">
+        <h2>Acessar Conta</h2>
+        
         {% with messages = get_flashed_messages(with_categories=true) %}
-          {% if messages %}
-            {% for category, message in messages %}
-              <div class="flash">{{ message }}</div>
-            {% endfor %}
-          {% endif %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
         {% endwith %}
-        <form action="/login" method="POST">
-            <input type="text" name="username" placeholder="Usuário" required>
-            <input type="password" name="password" placeholder="Senha" required>
+
+        <form method="POST" action="/login">
+            <div class="input-group">
+                <input type="text" name="username" placeholder="Usuário" required>
+            </div>
+            <div class="input-group">
+                <input type="password" id="password" name="password" placeholder="Senha" required>
+                <button type="button" class="toggle-btn" onclick="togglePassword('password')">Mostrar</button>
+            </div>
             <button type="submit">Entrar</button>
         </form>
-        <p>Não tem conta? <a href="/register">Cadastre-se</a></p>
+        <a href="/register">Não tem uma conta? Cadastre-se</a>
     </div>
+
+    <script>
+        function togglePassword(id) {
+            const input = document.getElementById(id);
+            input.type = input.type === "password" ? "text" : "password";
+        }
+    </script>
 </body>
 </html>
