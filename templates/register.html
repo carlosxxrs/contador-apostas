@@ -2,32 +2,60 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Criar Conta</title>
+    <title>Criar Conta - Gerenciador de Apostas</title>
     <style>
-        body { font-family: Arial, sans-serif; background: #121212; color: #fff; text-align: center; padding-top: 50px; }
-        .card { background: #1e1e1e; max-width: 350px; margin: 0 auto; padding: 20px; border-radius: 8px; }
-        input { width: 90%; padding: 10px; margin: 8px 0; background: #2a2a2a; border: 1px solid #333; color: #fff; border-radius: 4px; }
-        button { width: 95%; padding: 10px; background: #00e676; border: none; font-weight: bold; cursor: pointer; border-radius: 4px; color: #121212; margin-top: 10px; }
-        a { color: #00e676; text-decoration: none; }
-        .flash { background: #ff5252; color: white; padding: 8px; border-radius: 4px; margin-bottom: 10px; }
+        body { background-color: #121214; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .register-card { background: #202024; padding: 40px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); text-align: center; width: 320px; }
+        .input-group { position: relative; width: 100%; margin: 10px 0; }
+        input { width: 100%; padding: 12px; border-radius: 4px; border: 1px solid #29292e; background: #121214; color: white; box-sizing: border-box; }
+        .toggle-btn { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #a8a8b3; cursor: pointer; font-size: 12px; }
+        button[type="submit"] { width: 100%; padding: 12px; background: #04d361; border: none; color: white; font-weight: bold; border-radius: 4px; cursor: pointer; margin-top: 10px; }
+        button[type="submit"]:hover { background: #0ee96f; }
+        a { color: #a8a8b3; text-decoration: none; font-size: 14px; display: block; margin-top: 15px; }
+        .alert { background: #f75a68; color: white; padding: 10px; border-radius: 4px; font-size: 14px; margin-bottom: 15px; text-align: left; display: none; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h2>Criar Conta</h2>
-        {% with messages = get_flashed_messages(with_categories=true) %}
-          {% if messages %}
-            {% for category, message in messages %}
-              <div class="flash">{{ message }}</div>
-            {% endfor %}
-          {% endif %}
-        {% endwith %}
-        <form action="/register" method="POST">
-            <input type="text" name="username" placeholder="Usuário" required>
-            <input type="password" name="password" placeholder="Senha" required>
-            <button type="submit">Cadastrar</button>
+    <div class="register-card">
+        <h2>Criar Nova Conta</h2>
+        
+        <div class="alert" id="js-alert"></div>
+
+        <form method="POST" action="/register" onsubmit="return validarSenhas()">
+            <div class="input-group">
+                <input type="text" name="username" placeholder="Escolha um Usuário" required>
+            </div>
+            <div class="input-group">
+                <input type="password" id="password" name="password" placeholder="Crie uma Senha" required>
+                <button type="button" class="toggle-btn" onclick="togglePassword('password')">Mostrar</button>
+            </div>
+            <div class="input-group">
+                <input type="password" id="confirm_password" placeholder="Confirme a Senha" required>
+                <button type="button" class="toggle-btn" onclick="togglePassword('confirm_password')">Mostrar</button>
+            </div>
+            <button type="submit">Cadastrar e Salvar</button>
         </form>
-        <p>Já tem conta? <a href="/login">Entrar</a></p>
+        <a href="/login">Já tem uma conta? Faça login</a>
     </div>
+
+    <script>
+        function togglePassword(id) {
+            const input = document.getElementById(id);
+            input.type = input.type === "password" ? "text" : "password";
+        }
+
+        function validarSenhas() {
+            const senha = document.getElementById('password').value;
+            const confirmacao = document.getElementById('confirm_password').value;
+            const alertBox = document.getElementById('js-alert');
+
+            if (senha !== confirmacao) {
+                alertBox.textContent = "As senhas não coincidem!";
+                alertBox.style.display = "block";
+                return false;
+            }
+            return true;
+        }
+    </script>
 </body>
 </html>
