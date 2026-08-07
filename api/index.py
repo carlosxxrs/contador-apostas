@@ -18,14 +18,14 @@ if DATABASE_URL:
         DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+pg8000://", 1)
     app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 else:
-    # Fallback seguro para evitar travamento da Vercel quando não houver DATABASE_URL
+    # Fallback em memória para o ambiente serverless
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
-# Rota principal (passa a variável 'total' exigida pelos templates)
+# Rota principal (suporta index.html ou home.html)
 @app.route('/')
 def home():
     total_apostas = 0.0
@@ -34,13 +34,24 @@ def home():
     except:
         return render_template('home.html', total=total_apostas)
 
-@app.route('/login')
+@app.route('/login', methods=['GET', 'POST'])
 def login():
     return render_template('login.html')
 
-@app.route('/register')
+@app.route('/register', methods=['GET', 'POST'])
 def register():
     return render_template('register.html')
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('home'))
+
+# Rota para silenciar o aviso 404 do ícone do navegador
+@app.route('/favicon.ico')
+@app.route('/favicon.png')
+def favicon():
+    return '', 204
 
 # Objeto WSGI exportado para o ambiente serverless da Vercel
 app = app
