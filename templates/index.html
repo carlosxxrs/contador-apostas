@@ -3,24 +3,255 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel - Apostas & Lucros</title>
+    <title>Contador de Apostas</title>
     <style>
-        body { font-family: Arial, sans-serif; background: #121212; color: #fff; margin: 0; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; }
-        .card { background: #1e1e1e; padding: 20px; margin-bottom: 20px; border-radius: 8px; }
-        h1, h2, h3 { color: #00e676; }
-        input { padding: 8px; margin: 5px; background: #2a2a2a; border: 1px solid #333; color: #fff; border-radius: 4px; }
-        button { padding: 8px 15px; background: #00e676; border: none; font-weight: bold; cursor: pointer; border-radius: 4px; color: #121212; }
-        .btn-danger { background: #ff5252; color: white; }
-        a { color: #00e676; text-decoration: none; }
-        .flash { background: #ff5252; color: white; padding: 10px; border-radius: 4px; margin-bottom: 15px; }
+        :root {
+            --bg-dark: #121214;
+            --card-bg: #1e1e24;
+            --input-bg: #17171a;
+            --accent-purple: #8b5cf6;
+            --accent-purple-hover: #7c3aed;
+            --accent-green: #00e676;
+            --accent-red: #ff4d4d;
+            --text-main: #ffffff;
+            --text-muted: #9ca3af;
+            --border-color: #2d2d35;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            margin: 0;
+            padding: 16px;
+            box-sizing: border-box;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 0;
+        }
+
+        .btn-logout {
+            background-color: #2a2a32;
+            color: #ef4444;
+            border: 1px solid #3f3f46;
+            padding: 6px 12px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        /* CARD DE TOTAL ACUMULADO */
+        .card-total {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            border-left: 4px solid var(--accent-purple);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .card-total .title {
+            color: var(--text-muted);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .card-total .value {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        /* CARDS PADRÃO DE FORMULÁRIO E LISTAGEM */
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            border: 1px solid var(--border-color);
+        }
+
+        .card-title {
+            font-size: 17px;
+            font-weight: 700;
+            margin-top: 0;
+            margin-bottom: 16px;
+            color: var(--text-main);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        input {
+            width: 100%;
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 12px 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: var(--accent-purple);
+        }
+
+        .btn-purple {
+            width: 100%;
+            background-color: var(--accent-purple);
+            color: #ffffff;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-purple:hover {
+            background-color: var(--accent-purple-hover);
+        }
+
+        .btn-green {
+            width: 100%;
+            background-color: var(--accent-green);
+            color: #121214;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .btn-delete {
+            background-color: #2a2a32;
+            color: var(--text-muted);
+            border: 1px solid var(--border-color);
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        /* TABELAS DE PLATAFORMAS / APOSTAS */
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-muted);
+            font-size: 13px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 6px;
+        }
+
+        .table-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .table-row:last-child {
+            border-bottom: none;
+        }
+
+        .platform-name {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-main);
+            max-width: 60%;
+            word-break: break-word;
+        }
+
+        .platform-value {
+            color: var(--accent-green);
+            font-weight: 700;
+            font-size: 14px;
+            text-align: right;
+        }
+
+        .edit-icon {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 2px 6px;
+            margin-left: 6px;
+        }
+
+        .date-badge {
+            background-color: rgba(0, 230, 118, 0.1);
+            color: var(--accent-green);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-right: 6px;
+        }
+
+        .btn-remove-item {
+            background-color: #ef4444;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .total-green {
+            color: var(--accent-green);
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        .flash {
+            background-color: #ef4444;
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 13px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
+
     <div class="container">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h1>Painel de Controle</h1>
-            <a href="/logout"><button class="btn-danger">Sair</button></a>
+
+        <div class="header-top">
+            <span style="color: var(--text-muted); font-size: 13px;">Painel de Controle</span>
+            <a href="/logout" class="btn-logout">Sair</a>
         </div>
 
         {% with messages = get_flashed_messages(with_categories=true) %}
@@ -31,60 +262,107 @@
           {% endif %}
         {% endwith %}
 
-        <!-- Bloco de Apostas -->
-        <div class="card">
-            <h2>Cadastrar Aposta</h2>
-            <form action="/adicionar_aposta" method="POST">
-                <input type="text" name="casa" placeholder="Casa de Aposta" required>
-                <input type="number" step="0.01" name="valor" placeholder="Valor (R$)" required>
-                <button type="submit">Adicionar</button>
-            </form>
-
-            <h3>Minhas Apostas (Total: R$ {{ "%.2f"|format(total) }})</h3>
-            <ul>
-                {% for aposta in apostas %}
-                    <li>
-                        {{ aposta.casa }} - R$ {{ "%.2f"|format(aposta.valor) }}
-                        <form action="/deletar_aposta/{{ aposta.id }}" method="POST" style="display:inline;">
-                            <button type="submit" class="btn-danger" style="padding: 2px 5px; font-size: 12px;">X</button>
-                        </form>
-                    </li>
-                {% endfor %}
-            </ul>
+        <!-- CARD 1: TOTAL ACUMULADO -->
+        <div class="card-total">
+            <div class="title">Total Acumulado</div>
+            <div class="value">R$ {{ "%.2f"|format(total) }}</div>
         </div>
 
-        <!-- Bloco de Lucros -->
+        <!-- CARD 2: ADICIONAR NOVA ENTRADA -->
         <div class="card">
-            <h2>Criar / Adicionar Lucro por Conta</h2>
-            <form action="/criar_conta_lucro" method="POST">
-                <input type="text" name="nome_conta" placeholder="Nome da Conta (ex: BET365)" required>
-                <input type="text" name="nome_aposta" placeholder="Nome da Aposta/Entrada">
-                <input type="number" step="0.01" name="valor_lucro" placeholder="Valor do Lucro (R$)">
-                <input type="text" name="data_registro" placeholder="Data (DD/MM/AAAA)">
-                <button type="submit">Salvar Conta/Lucro</button>
+            <h3 class="card-title">Adicionar Nova Entrada</h3>
+            <form action="/adicionar_aposta" method="POST">
+                <div class="input-group">
+                    <input type="text" name="casa" placeholder="Nome da Plataforma" required>
+                    <input type="number" step="0.01" name="valor" placeholder="Valor (R$)" required>
+                </div>
+                <button type="submit" class="btn-purple">Salvar Registro</button>
             </form>
+        </div>
 
-            <h3>Resumo de Lucros por Conta</h3>
-            {% for conta, dados in contas_lucro.items() %}
-                <div style="border-top: 1px solid #333; padding-top: 10px; margin-top: 10px;">
-                    <h4>Conta: {{ conta }} (Total: R$ {{ "%.2f"|format(dados.total) }})</h4>
-                    <ul>
-                        {% for item in dados.itens %}
-                            <li>
-                                {{ item.data_registro }} - {{ item.nome_aposta }}: R$ {{ "%.2f"|format(item.valor_lucro) }}
-                                <form action="/deletar_lucro/{{ item.id }}" method="POST" style="display:inline;">
-                                    <button type="submit" class="btn-danger" style="padding: 2px 5px; font-size: 12px;">X</button>
-                                </form>
-                            </li>
-                        {% endfor %}
-                    </ul>
-                    <form action="/limpar_conta_lucro" method="POST">
-                        <input type="hidden" name="nome_conta" value="{{ conta }}">
-                        <button type="submit" class="btn-danger" style="font-size: 12px;">Limpar esta Conta</button>
+        <!-- CARD 3: LISTAGEM DE PLATAFORMAS -->
+        <div class="card">
+            <div class="table-header">
+                <span>Plataforma</span>
+                <span>Valor Registrado</span>
+            </div>
+
+            {% for aposta in apostas %}
+            <div class="table-row">
+                <div class="platform-name">{{ aposta.casa }}</div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div class="platform-value">R$<br>{{ "%.2f"|format(aposta.valor) }}</div>
+                    <form action="/deletar_aposta/{{ aposta.id }}" method="POST" style="margin:0;">
+                        <button type="submit" class="edit-icon" title="Excluir">✏️</button>
                     </form>
                 </div>
+            </div>
+            {% else %}
+            <div style="color: var(--text-muted); font-size: 13px; text-align: center; padding: 10px 0;">
+                Nenhuma entrada registrada.
+            </div>
             {% endfor %}
         </div>
+
+        <!-- CARD 4: CRIAR NOVA CONTA DE LUCRO -->
+        <div class="card">
+            <h3 class="card-title">Criar Conta de Lucro</h3>
+            <form action="/criar_conta_lucro" method="POST">
+                <div class="input-group">
+                    <input type="text" name="nome_conta" placeholder="Nome da Conta (ex: BETANO (LUAN) GERAL)" required>
+                    <input type="text" name="nome_aposta" placeholder="Nome da Entrada (Opcional)">
+                    <input type="number" step="0.01" name="valor_lucro" placeholder="Lucro R$ (Opcional)">
+                    <input type="text" name="data_registro" placeholder="Data (ex: 29/07)">
+                </div>
+                <button type="submit" class="btn-purple">Criar Bloco de Conta</button>
+            </form>
+        </div>
+
+        <!-- CARDS DE CONTAS DE LUCRO REGISTRADAS -->
+        {% for conta, dados in contas_lucro.items() %}
+        <div class="card">
+            <div class="card-title">
+                <u style="text-underline-offset: 4px;">{{ conta }}</u>
+                <form action="/limpar_conta_lucro" method="POST" style="margin:0;">
+                    <input type="hidden" name="nome_conta" value="{{ conta }}">
+                    <button type="submit" class="btn-delete">🗑️ Apagar Conta</button>
+                </form>
+            </div>
+
+            <div class="total-green">
+                TOTAL = R$ {{ "%.2f"|format(dados.total) }} de lucro
+            </div>
+
+            <!-- FORMULÁRIO DENTRO DA CONTA -->
+            <form action="/adicionar_lucro_direto" method="POST" style="margin-bottom: 16px;">
+                <input type="hidden" name="nome_conta" value="{{ conta }}">
+                <div class="input-group">
+                    <input type="text" name="nome_aposta" placeholder="Nome da Aposta" required>
+                    <input type="number" step="0.01" name="valor_lucro" placeholder="Lucro (R$)" required>
+                    <input type="text" name="data_registro" placeholder="Data (ex: 29/07)">
+                </div>
+                <button type="submit" class="btn-green">+ Add Lucro</button>
+            </form>
+
+            <!-- ITENS DA CONTA -->
+            {% for item in dados.itens %}
+            <div class="table-row">
+                <div style="font-size: 13px; font-weight: 700;">
+                    <span class="date-badge">[{{ item.data_registro }}]</span>
+                    {{ item.nome_aposta }} =
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span class="platform-value">R$ {{ "%.2f"|format(item.valor_lucro) }}</span>
+                    <form action="/deletar_lucro/{{ item.id }}" method="POST" style="margin:0;">
+                        <button type="submit" class="btn-remove-item">Remover</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+
     </div>
+
 </body>
 </html>
