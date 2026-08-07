@@ -2,14 +2,12 @@ import os
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_sqlalchemy import SQLAlchemy
 
-# Localiza a pasta 'templates' na raiz
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 TEMPLATE_DIR = os.path.join(BASE_DIR, 'templates')
 
 app = Flask(__name__, template_folder=TEMPLATE_DIR)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'chave_secreta_contador_apostas')
 
-# Configuração da URL do Banco de Dados PostgreSQL (Neon)
 DATABASE_URL = os.getenv('DATABASE_URL')
 if DATABASE_URL:
     if DATABASE_URL.startswith("postgres://"):
@@ -24,7 +22,6 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
-# --- MODELOS DO BANCO DE DADOS ---
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
@@ -35,7 +32,6 @@ class Aposta(db.Model):
     valor = db.Column(db.Float, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
-# Função para criar tabelas no Neon automaticamente
 def init_db():
     try:
         with app.app_context():
@@ -45,11 +41,10 @@ def init_db():
 
 init_db()
 
-# --- ROTAS ---
-
 @app.route('/')
 def home():
     user_id = session.get('user_id')
+    username = session.get('username')
     total_apostas = 0.0
     
     if user_id:
@@ -60,9 +55,9 @@ def home():
             db.session.rollback()
     
     try:
-        return render_template('index.html', total=total_apostas, user_id=user_id)
+        return render_template('index.html', total=total_apostas, user_id=user_id, username=username)
     except Exception:
-        return render_template('home.html', total=total_apostas, user_id=user_id)
+        return render_template('home.html', total=total_apostas, user_id=user_id, username=username)
 
 @app.route('/adicionar_aposta', methods=['POST'])
 def adicionar_aposta():
@@ -77,6 +72,7 @@ def adicionar_aposta():
             nova_aposta = Aposta(valor=float(valor), user_id=user_id)
             db.session.add(nova_aposta)
             db.session.commit()
+            flash('Aposta adicionada com sucesso!')
         except Exception:
             db.session.rollback()
 
@@ -85,33 +81,40 @@ def adicionar_aposta():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
+        # Flexibilidade para capturar campos em português ou inglês
+        username = request.form.get('username') or request.form.get('usuario') or request.form.get('email')
+        password = request.form.get('password') or request.form.get('senha')
         
         try:
+            init_db()
             user = User.query.filter_by(username=username, password=password).first()
             if user:
                 session['user_id'] = user.id
                 session['username'] = user.username
+                flash(f'Bem-vindo de volta, {user.username}!')
                 return redirect(url_for('home'))
             flash('Usuário ou senha incorretos.')
         except Exception:
             db.session.rollback()
-            flash('Erro ao consultar usuário.')
+            flash('Erro ao realizar login.')
             
     return render_template('login.html')
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
+        username = request.form.get('username') or request.form.get('usuario') or request.form.get('email')
+        password = request.form.get('password') or request.form.get('senha')
         
+        if not username or not password:
+            flash('Preencha todos os campos!')
+            return render_template('register.html')
+
         try:
             init_db()
             if User.query.filter_by(username=username).first():
-                flash('Usuário já existe!')
-                return redirect(url_for('register'))
+                flash('Este nome de usuário já está cadastrado!')
+                return render_template('register.html')
                 
             new_user = User(username=username, password=password)
             db.session.add(new_user)
@@ -119,16 +122,18 @@ def register():
             
             session['user_id'] = new_user.id
             session['username'] = new_user.username
+            flash('Cadastro efetuado com sucesso!')
             return redirect(url_for('home'))
         except Exception as e:
             db.session.rollback()
-            flash('Erro ao criar conta. Tente novamente.')
+            flash('Erro ao cadastrar no banco de dados. Tente novamente.')
         
     return render_template('register.html')
 
 @app.route('/logout')
 def logout():
     session.clear()
+    flash('Você saiu da sua conta.')
     return redirect(url_for('home'))
 
 @app.route('/favicon.ico')
